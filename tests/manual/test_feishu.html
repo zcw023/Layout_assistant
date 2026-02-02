@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>飞书图片调试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #raw { background: #1e1e1e; color: #d4d4d4; padding: 15px; overflow: auto; max-height: 400px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; }
+        #preview { border: 2px solid #07c160; padding: 20px; margin: 10px 0; min-height: 200px; }
+        .section { margin: 20px 0; }
+        h3 { color: #333; }
+    </style>
+</head>
+<body>
+    <h1>🖼️ 飞书文档图片调试工具</h1>
+    <p>从飞书文档复制内容（带图片），然后 <strong>按 Ctrl+V 粘贴到页面任意位置</strong></p>
+    
+    <div class="section">
+        <h3>原始 HTML：</h3>
+        <div id="raw">等待粘贴...</div>
+    </div>
+    
+    <div class="section">
+        <h3>渲染预览：</h3>
+        <div id="preview">等待粘贴...</div>
+    </div>
+    
+    <script>
+        const rawDiv = document.getElementById('raw');
+        const previewDiv = document.getElementById('preview');
+        
+        document.addEventListener('paste', function(e) {
+            e.preventDefault();
+            
+            const clipboardData = e.clipboardData;
+            const html = clipboardData.getData('text/html');
+            
+            // 显示原始 HTML
+            rawDiv.textContent = html || '（无 HTML 内容）';
+            
+            // 渲染预览
+            if (html) {
+                previewDiv.innerHTML = html;
+                
+                // 检查所有图片形式
+                setTimeout(() => {
+                    analyzeImages(previewDiv, html);
+                }, 100);
+            }
+        });
+        
+        function analyzeImages(container, rawHtml) {
+            let report = '\n\n=== 图片分析报告 ===\n';
+            
+            // 1. 检查 img 标签
+            const imgs = container.querySelectorAll('img');
+            report += `1. <img> 标签数量: ${imgs.length}\n`;
+            imgs.forEach((img, i) => {
+                report += `   [${i}] src: ${img.src.substring(0, 80)}...\n`;
+            });
+            
+            // 2. 检查 background-image
+            const allElements = container.querySelectorAll('*');
+            let bgCount = 0;
+            allElements.forEach((el, i) => {
+                const style = window.getComputedStyle(el);
+                const bg = style.backgroundImage;
+                if (bg && bg !== 'none') {
+                    bgCount++;
+                    report += `   [bg-${bgCount}] ${el.tagName}: ${bg.substring(0, 80)}...\n`;
+                }
+            });
+            report += `2. background-image 数量: ${bgCount}\n`;
+            
+            // 3. 检查空 div（可能是图片占位）
+            const emptyDivs = container.querySelectorAll('div:empty');
+            report += `3. 空 div 数量: ${emptyDivs.length}\n`;
+            
+            // 4. 检查原始 HTML 中的图片相关字符串
+            const hasBase64 = rawHtml.includes('data:image');
+            const hasHttpImg = rawHtml.match(/https?:\/\/[^"'>\s]+\.(jpg|jpeg|png|gif|webp)/i);
+            report += `4. 包含 base64: ${hasBase64}\n`;
+            report += `5. 包含 http 图片: ${hasHttpImg ? hasHttpImg[0] : '否'}\n`;
+            
+            rawDiv.textContent += report;
+        }
+    </script>
+</body>
+</html>

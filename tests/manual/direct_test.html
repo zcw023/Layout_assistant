@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="js/themes.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+</head>
+<body>
+    <h1>直接测试复制逻辑</h1>
+    <button onclick="runTest()">运行测试</button>
+    <div id="log" style="white-space: pre-wrap; font-family: monospace; background: #f5f5f5; padding: 20px; margin-top: 20px;"></div>
+    
+    <script>
+        function log(msg) {
+            document.getElementById('log').textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        function runTest() {
+            document.getElementById('log').textContent = '';
+            
+            // 1. 测试 marked
+            const md = '# 标题\n\n正文**加粗**\n\n> 引用';
+            log('原始 Markdown:');
+            log(md);
+            log('');
+            
+            // 2. marked 解析
+            const html = marked.parse(md);
+            log('marked 生成的 HTML:');
+            log(html);
+            log('');
+            
+            // 3. 检查主题
+            log('WECHAT_THEMES 存在: ' + (typeof WECHAT_THEMES !== 'undefined'));
+            log('dushi 主题存在: ' + (typeof WECHAT_THEMES !== 'undefined' && WECHAT_THEMES.dushi ? '是' : '否'));
+            
+            if (typeof WECHAT_THEMES !== 'undefined' && WECHAT_THEMES.dushi) {
+                log('dushi.h1: ' + WECHAT_THEMES.dushi.h1.substring(0, 60) + '...');
+            }
+            log('');
+            
+            // 4. 模拟 copyToWechat 逻辑
+            const temp = document.createElement('div');
+            temp.innerHTML = html;
+            
+            log('temp.children 数量: ' + temp.children.length);
+            log('temp.children:');
+            Array.from(temp.children).forEach((el, i) => {
+                log('  [' + i + '] ' + el.tagName + ' - ' + el.outerHTML.substring(0, 80));
+            });
+        }
+    </script>
+</body>
+</html>

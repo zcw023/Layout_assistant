@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>简单测试</title>
+    <script src="js/themes.js"></script>
+</head>
+<body style="padding: 40px;">
+    <h1>简单测试页面</h1>
+    <button onclick="test()">测试主题和生成</button>
+    <div id="result" style="margin-top: 20px; padding: 20px; background: #f0f0f0;"></div>
+    
+    <script>
+        function test() {
+            const result = document.getElementById('result');
+            
+            // 检查 WECHAT_THEMES
+            if (typeof WECHAT_THEMES === 'undefined') {
+                result.innerHTML = '<p style="color:red">❌ WECHAT_THEMES 未定义</p>';
+                return;
+            }
+            
+            // 检查 dushi 主题
+            if (!WECHAT_THEMES.dushi) {
+                result.innerHTML = '<p style="color:red">❌ dushi 主题未找到</p>';
+                return;
+            }
+            
+            // 生成测试 HTML
+            const html = '<h1>测试标题</h1><p>测试段落，<strong>加粗</strong></p>';
+            const theme = WECHAT_THEMES.dushi;
+            
+            // 简单应用样式
+            const styled = '<div style="' + theme.container + '">' +
+                '<h1 style="' + theme.h1 + '">测试标题</h1>' +
+                '<p style="' + theme.p + '">测试段落，<strong style="' + theme.strong + '">加粗</strong></p>' +
+                '</div>';
+            
+            result.innerHTML = '<h3>生成的 HTML:</h3><pre style="background:#333;color:#0f0;padding:20px;overflow:auto;">' + 
+                styled.replace(/</g, '&lt;').replace(/>/g, '&gt;') + 
+                '</pre><h3>预览效果:</h3>' + styled;
+        }
+    </script>
+</body>
+</html>

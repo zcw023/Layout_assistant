@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信公众号排版助手 - 智能文档转换工具</title>
+
+    <!-- Content Security Policy - 安全策略 -->
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'self';
+                   script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;
+                   style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+                   img-src 'self' https: data:;
+                   font-src 'self' data:;
+                   connect-src 'self' https:;">
+
+    <link rel="stylesheet" href="css/style.css?v=2026">
+
+    <!-- 引入第三方库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+    <!-- DOMPurify - XSS 防护 -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="js/themes.js?v=2026"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部工具栏 -->
+        <header class="toolbar">
+            <div class="logo">
+                <span class="logo-icon">📝</span>
+                <span class="logo-text">微信公众号排版助手</span>
+            </div>
+            <div class="toolbar-actions">
+                <label class="upload-btn" for="file-upload">
+                    <span>📄 上传文档</span>
+                    <input type="file" id="file-upload" accept=".docx,.md,.txt,.markdown" hidden>
+                </label>
+                <select id="theme-select" class="theme-selector">
+                    <optgroup label="经典主题">
+                        <option value="chenlu">晨露 · 极简奶油</option>
+                        <option value="dushi">都市 · 杂志编辑</option>
+                        <option value="senxi">森系 · 自然治愈</option>
+                    </optgroup>
+                    <optgroup label="特色风格">
+                        <option value="guochao">国潮 · 新中式</option>
+                        <option value="wabi">侘寂 · 日式极简</option>
+                        <option value="vintage">胶片 · 复古怀旧</option>
+                        <option value="sketch">手绘 · 插画风格</option>
+                        <option value="fresh">清新 · 文艺自然</option>
+                        <option value="industrial">工业 · 硬核机能</option>
+                    </optgroup>
+                </select>
+                <button id="copy-btn" class="copy-btn">
+                    <span>📋 一键复制</span>
+                </button>
+                <button id="reset-btn" class="reset-btn">
+                    <span>🔄 重置</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主编辑区 -->
+        <main class="editor-container">
+            <!-- 左侧：输入区 -->
+            <div class="input-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📝 编辑 / 粘贴 Markdown</span>
+                    <span class="file-info" id="file-info">未选择文件</span>
+                </div>
+                <div class="editor-mode-bar">
+                    <button type="button" class="mode-btn active" data-mode="markdown">Markdown</button>
+                    <button type="button" class="mode-btn" data-mode="feishu">飞书文档</button>
+                </div>
+
+                <textarea id="editor" placeholder="在此粘贴内容，或点击上方上传文档...
+
+✨ 支持：
+• Markdown 语法
+• 飞书/语雀文档（直接复制粘贴，保留图片）
+• Word 文档上传
+
+⌨️ 快捷键：
+• Cmd+A 全选 | Cmd+Enter 复制到微信
+• Cmd+K 清空 | Cmd+1~5 快速切换主题"># 这是一级标题
+
+## 二级标题：排版之美
+
+### 三级标题：探索 Markdown 的魅力
+
+这是一段普通的正文文字。Markdown 是一种轻量级标记语言，它允许你使用易读易写的纯文本格式编写文档，然后转换成结构化的 HTML 文档。
+
+**这是加粗的文字**，用于强调重要内容。
+
+*这是斜体的文字*，用于表示特殊含义或引用。
+
+***这是加粗且斜体的文字***，三重强调效果。
+
+~~这是删除线文字~~，表示废弃或过时的内容。
+
+---
+
+## 列表展示
+
+### 无序列表
+
+- 第一章：初识 Markdown
+- 第二章：基础语法入门
+  - 2.1 标题与段落
+  - 2.2 文字样式
+  - 2.3 列表使用
+- 第三章：进阶技巧
+
+### 有序列表
+
+1. 准备工作环境
+2. 安装必要软件
+3. 配置编辑器
+   1. 选择主题配色
+   2. 设置字体大小
+   3. 开启自动保存
+4. 开始创作
+
+---
+
+## 引用与强调
+
+> 这是一段引用文字。可以用来展示名人名言、重要提示或者补充说明。
+>
+> 引用可以有多行，并且支持 **加粗** 和 *斜体* 等样式。
+
+> 💡 **温馨提示**：不同主题下，引用块的样式会有很大差异，试试切换主题看看吧！
+
+---
+
+## 代码展示
+
+行内代码：`console.log('Hello World')`
+
+代码块示例：
+
+```javascript
+// JavaScript 示例
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+console.log(greet('Markdown'));
+```
+
+```python
+# Python 示例
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(f"第10项: {fibonacci(10)}")
+```
+
+---
+
+## 表格展示
+
+| 功能特性 | 晨露主题 | 都市主题 | 星空主题 |
+|:---------|:--------:|:--------:|:--------:|
+| 标题样式 | 优雅下划线 | 粗黑现代 | 发光效果 |
+| 引用样式 | 柔和圆角 | 纯黑底白字 | 半透明边框 |
+| 代码高亮 | 暖色背景 | 对比强烈 | 暗黑风格 |
+| 适用场景 | 生活随笔 | 商业报告 | 科技文章 |
+
+---
+
+## 链接与图片
+
+### 文字链接
+
+[访问 GitHub](https://github.com) | [Markdown 指南](https://www.markdownguide.org) | [微信编辑器](https://mp.weixin.qq.com)
+
+### 图片展示
+
+![示例图片](https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop)
+
+*图片来自 Unsplash，用于测试图片排版效果*
+
+---
+
+## 任务清单
+
+- [x] 学习 Markdown 基础语法
+- [x] 掌握标题和段落排版
+- [x] 练习列表和表格制作
+- [ ] 探索更多高级用法
+- [ ] 创作第一篇公众号文章
+
+---
+
+## 分割线效果
+
+下面是一条分割线：
+
+---
+
+分割线用于分隔文章的不同部分，让内容更有层次感。
+
+---
+
+## 综合排版练习
+
+> 📚 **学习建议**
+> 
+> 1. 先熟悉基础语法（标题、加粗、斜体）
+> 2. 尝试不同主题的视觉效果
+> 3. 练习使用快捷键提高效率
+> 4. 多复制到微信编辑器预览效果
+
+**现在你可以：**
+- 切换不同主题，观察排版变化
+- 使用 Cmd+Enter 快速复制到微信
+- 修改内容，练习 Markdown 语法
+- 清空后尝试自己创作
+
+---
+
+*祝你排版愉快！ 🎉*</textarea>
+
+                <!-- 飞书富文本模式：支持直接粘贴富文本（含图片/表格） -->
+                <div id="feishu-editor" class="feishu-editor" contenteditable="true" spellcheck="false" hidden
+                     data-placeholder="在这里粘贴飞书文档内容（支持图片/表格/列表）。&#10;&#10;提示：如果你在 Markdown 模式粘贴到飞书富文本，会自动切换到这里。"></div>
+            </div>
+
+            <!-- 中间：分隔线 -->
+            <div class="resizer"></div>
+
+            <!-- 右侧：预览区 -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span class="panel-title">👁️ 微信预览</span>
+                    <div class="preview-actions">
+                    </div>
+                </div>
+                <div class="preview-wrapper" id="preview-wrapper">
+                    <div id="preview-content" class="wechat-content chenlu">
+                        <div class="placeholder">
+                            <div class="placeholder-icon">✨</div>
+                            <div class="placeholder-text">
+                                在左侧粘贴内容或上传文件<br>
+                                精美的排版预览将在这里呈现
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="char-count">字符数: 0</span>
+                <span id="word-count">字数: 0</span>
+            </div>
+            <div class="status-center">
+                <span class="tip">💡 Cmd+Enter 复制 | Cmd+K 清空 | Cmd+1-5 切换主题</span>
+            </div>
+            <div class="status-right">
+                <span id="copy-status"></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 隐藏的原生内容，用于复制 -->
+    <div id="clipboard-content" style="position: absolute; left: -9999px;"></div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="toast"></div>
+
+    <script src="js/app.js?v=2026"></script>
+</body>
+</html>

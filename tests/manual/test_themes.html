@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>主题测试</title>
+    <link rel="stylesheet" href="css/style.css?v=2">
+    <script src="js/themes.js?v=2"></script>
+    <style>
+        body { padding: 20px; font-family: sans-serif; }
+        .test-box { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>🎨 主题样式测试</h1>
+    <p>如果下面的预览框样式各不相同，说明主题正常。</p>
+    
+    <div class="test-box">
+        <h3>国潮 (guochao)</h3>
+        <div id="guochao-preview" class="wechat-content guochao">
+            <h1>测试标题</h1>
+            <p>这是一段测试文字，<strong>加粗部分</strong>。</p>
+            <blockquote>引用块测试</blockquote>
+        </div>
+    </div>
+    
+    <div class="test-box">
+        <h3>赛博 (cyber)</h3>
+        <div id="cyber-preview" class="wechat-content cyber">
+            <h1>测试标题</h1>
+            <p>这是一段测试文字，<strong>加粗部分</strong>。</p>
+            <blockquote>引用块测试</blockquote>
+        </div>
+    </div>
+    
+    <div class="test-box">
+        <h3>手绘 (sketch)</h3>
+        <div id="sketch-preview" class="wechat-content sketch">
+            <h1>测试标题</h1>
+            <p>这是一段测试文字，<strong>加粗部分</strong>。</p>
+            <blockquote>引用块测试</blockquote>
+        </div>
+    </div>
+    
+    <script>
+        console.log('WECHAT_THEMES:', typeof WECHAT_THEMES);
+        if (typeof WECHAT_THEMES !== 'undefined') {
+            console.log('可用主题:', Object.keys(WECHAT_THEMES));
+        }
+    </script>
+</body>
+</html>

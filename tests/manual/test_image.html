@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>图片粘贴测试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        #info { background: #f0f0f0; padding: 10px; margin: 10px 0; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow: auto; }
+        #preview { border: 2px solid #333; padding: 20px; margin: 10px 0; min-height: 200px; }
+        textarea { width: 100%; height: 200px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <h1>🖼️ 图片粘贴测试</h1>
+    <p>1. 从飞书文档复制带图片的内容</p>
+    <p>2. 点击下面的框，按 Ctrl+V 粘贴</p>
+    <p>3. 查看调试信息</p>
+    
+    <textarea id="pasteArea" placeholder="点击这里，然后粘贴..."></textarea>
+    
+    <h3>调试信息：</h3>
+    <div id="info"></div>
+    
+    <h3>预览：</h3>
+    <div id="preview"></div>
+    
+    <script>
+        const pasteArea = document.getElementById('pasteArea');
+        const info = document.getElementById('info');
+        const preview = document.getElementById('preview');
+        
+        function log(msg) {
+            info.textContent += msg + '\n';
+            console.log(msg);
+        }
+        
+        pasteArea.addEventListener('paste', function(e) {
+            e.preventDefault();
+            info.textContent = '';
+            log('=== 粘贴事件 ===');
+            
+            const clipboardData = e.clipboardData || window.clipboardData;
+            
+            // 获取所有格式
+            const types = clipboardData.types;
+            log('可用格式: ' + JSON.stringify(types));
+            
+            // 获取 HTML
+            const html = clipboardData.getData('text/html');
+            log('HTML 长度: ' + (html ? html.length : 0));
+            
+            if (html) {
+                // 检查图片
+                const imgCount = (html.match(/<img/gi) || []).length;
+                log('图片标签数量: ' + imgCount);
+                
+                // 提取图片 src
+                const imgRegex = /<img[^>]+src="([^"]+)"/gi;
+                let match;
+                let i = 0;
+                while ((match = imgRegex.exec(html)) !== null) {
+                    const src = match[1];
+                    log(`图片 ${++i}: ${src.substring(0, 100)}${src.length > 100 ? '...' : ''}`);
+                    
+                    if (src.startsWith('data:image')) {
+                        log(`  → 类型: base64, 大小: ${Math.round(src.length / 1024)}KB`);
+                    } else if (src.startsWith('http')) {
+                        log(`  → 类型: 在线图片`);
+                    }
+                }
+                
+                // 显示预览
+                preview.innerHTML = html;
+                
+                // 显示在 textarea
+                pasteArea.value = html;
+            }
+            
+            // 也获取纯文本
+            const text = clipboardData.getData('text/plain');
+            log('\n纯文本长度: ' + (text ? text.length : 0));
+        });
+    </script>
+</body>
+</html>

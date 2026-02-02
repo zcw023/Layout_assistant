@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>复制调试 - 都市主题</title>
+    <script src="js/themes.js?v=2026"></script>
+    <style>
+        body { padding: 20px; font-family: sans-serif; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .box { background: #fff; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        h3 { margin-top: 0; color: #333; }
+        textarea { width: 100%; height: 300px; font-family: monospace; font-size: 11px; border: 1px solid #ddd; padding: 10px; }
+        .preview-box { border: 2px solid #333; padding: 40px; margin: 20px 0; background: #fff; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #000; color: #fff; border: none; margin-right: 10px; }
+        button:hover { background: #333; }
+        .info { background: #e3f2fd; padding: 15px; border-radius: 4px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 都市主题复制调试</h1>
+        
+        <div class="info">
+            <strong>说明：</strong>输入 Markdown 内容，点击生成，查看右侧预览和生成的 HTML 源码。
+            对比两者是否一致。如果生成的 HTML 中没有内联 style，说明复制逻辑有问题。
+        </div>
+        
+        <div class="box">
+            <h3>1. 输入 Markdown</h3>
+            <textarea id="input"># 测试标题
+
+这是正文，**加粗文字**和*斜体*。
+
+> 引用块
+
+---
+
+另一段</textarea>
+        </div>
+        
+        <div class="box">
+            <h3>2. 操作</h3>
+            <button onclick="generate()">生成 HTML（都市主题）</button>
+            <button onclick="copyToClipboard()">复制 HTML</button>
+        </div>
+        
+        <div class="box">
+            <h3>3. 预览效果（应该和微信一致）</h3>
+            <div id="preview-container"></div>
+        </div>
+        
+        <div class="box">
+            <h3>4. 生成的 HTML 源码（检查是否有 style 属性）</h3>
+            <textarea id="output" readonly></textarea>
+        </div>
+    </div>
+    
+    <script>
+        function generate() {
+            const input = document.getElementById('input').value;
+            
+            // Markdown 转 HTML（简化版）
+            let html = input
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+                .replace(/^---$/gm, '<hr>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^(?!<[hbe]|<hr)(.+)$/gm, '<p>$1</p>');
+            
+            // 使用 app.js 相同的逻辑生成样式
+            const styledHtml = generateStyledHtml(html, 'dushi');
+            
+            // 显示预览
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = styledHtml;
+            previewContainer.style.cssText = 'border: 2px solid #333; padding: 40px; margin: 20px 0; background: #fff;';
+            
+            // 显示源码
+            document.getElementById('output').value = styledHtml;
+        }
+        
+        // 从 app.js 复制的逻辑
+        function generateStyledHtml(html, themeName) {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const body = doc.body;
+            
+            const theme = WECHAT_THEMES[themeName];
+            
+            // 创建包装容器
+            const wrapper = document.createElement('div');
+            wrapper.setAttribute('style', theme.container);
+            
+            // 处理每个子元素
+            Array.from(body.children).forEach(function(child) {
+                const styledChild = applyStylesRecursive(child, theme);
+                wrapper.appendChild(styledChild);
+            });
+            
+            return wrapper.outerHTML;
+        }
+        
+        function applyStylesRecursive(element, theme) {
+            const tagName = element.tagName.toLowerCase();
+            
+            // 克隆元素
+            const clone = element.cloneNode(false);
+            
+            // 应用当前元素的样式
+            if (theme[tagName]) {
+                clone.setAttribute('style', theme[tagName]);
+            }
+            
+            // 特殊处理图片
+            if (tagName === 'img') {
+                const src = element.getAttribute('src') || '';
+                const alt = element.getAttribute('alt') || '';
+                clone.setAttribute('src', src);
+                clone.setAttribute('alt', alt);
+                clone.setAttribute('style', theme.img || 'max-width:100%;height:auto;display:block;margin:20px auto;');
+            }
+            
+            // 递归处理子元素
+            Array.from(element.children).forEach(function(child) {
+                const styledChild = applyStylesRecursive(child, theme);
+                clone.appendChild(styledChild);
+            });
+            
+            // 处理文本节点
+            if (clone.children.length === 0 && element.textContent) {
+                clone.textContent = element.textContent;
+            }
+            
+            return clone;
+        }
+        
+        async function copyToClipboard() {
+            const html = document.getElementById('output').value;
+            if (!html) {
+                alert('先生成 HTML');
+                return;
+            }
+            
+            try {
+                const blob = new Blob([html], { type: 'text/html' });
+                await navigator.clipboard.write([
+                    new ClipboardItem({ 'text/html': blob })
+                ]);
+                alert('已复制！请到微信编辑器粘贴查看效果');
+            } catch (err) {
+                console.error(err);
+                alert('复制失败: ' + err.message);
+            }
+        }
+        
+        // 初始生成
+        generate();
+    </script>
+</body>
+</html>

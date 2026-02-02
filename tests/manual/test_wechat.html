@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>微信样式调试</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { display: flex; gap: 20px; }
+        .box { flex: 1; background: white; padding: 20px; border-radius: 8px; }
+        h3 { margin-top: 0; }
+        #preview { border: 2px solid #07c160; min-height: 300px; padding: 40px; }
+        #source { background: #1e1e1e; color: #d4d4d4; padding: 15px; font-family: monospace; font-size: 11px; white-space: pre-wrap; word-break: break-all; max-height: 400px; overflow: auto; }
+        textarea { width: 100%; height: 150px; font-family: monospace; }
+        button { padding: 10px 20px; margin: 10px 0; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>🧪 微信样式调试工具</h2>
+    <p>粘贴内容后，对比「预览效果」和「实际 HTML」</p>
+    
+    <textarea id="input" placeholder="在此粘贴内容..."></textarea>
+    <br>
+    <button onclick="generate()">生成微信 HTML</button>
+    
+    <div class="container">
+        <div class="box">
+            <h3>预览效果（应该和微信一致）</h3>
+            <div id="preview"></div>
+        </div>
+        <div class="box">
+            <h3>生成的 HTML 源码</h3>
+            <div id="source">点击生成按钮查看...</div>
+        </div>
+    </div>
+    
+    <script>
+        // 主题配置
+        const themes = {
+            chenlu: {
+                container: 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;font-size:16px;line-height:1.9;color:#3d3d3d;',
+                h1: 'font-size:26px;font-weight:600;color:#1a1a1a;margin:36px 0 20px;padding-bottom:12px;border-bottom:2px solid #f0ebe3;',
+                h2: 'font-size:20px;font-weight:600;color:#2c2c2c;margin:28px 0 16px;padding-left:12px;border-left:3px solid #d4c4b0;',
+                p: 'margin:16px 0;text-align:justify;',
+                img: 'max-width:100%;height:auto;display:block;margin:20px auto;border-radius:8px;'
+            }
+        };
+        
+        function generate() {
+            const content = document.getElementById('input').value;
+            const t = themes.chenlu;
+            
+            // 解析 HTML
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(content, 'text/html');
+            const body = doc.body;
+            
+            // 应用样式
+            body.setAttribute('style', t.container);
+            body.querySelectorAll('*').forEach(el => {
+                const tag = el.tagName.toLowerCase();
+                if (t[tag]) el.setAttribute('style', t[tag]);
+            });
+            
+            // 显示结果
+            const html = body.innerHTML;
+            document.getElementById('preview').innerHTML = html;
+            document.getElementById('source').textContent = html;
+        }
+    </script>
+</body>
+</html>

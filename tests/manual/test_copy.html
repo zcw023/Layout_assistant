@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>复制测试</title>
+    <script src="js/themes.js?v=2026"></script>
+    <style>
+        body { padding: 20px; font-family: sans-serif; }
+        .box { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        textarea { width: 100%; height: 200px; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 复制样式测试</h1>
+    
+    <div class="box">
+        <h3>原始 Markdown</h3>
+        <textarea id="input"># 测试标题
+
+这是一段文字，**加粗**和*斜体*。
+
+> 引用块
+
+---
+
+另一段</textarea>
+    </div>
+    
+    <div class="box">
+        <h3>选择主题</h3>
+        <select id="theme">
+            <option value="chenlu">晨露</option>
+            <option value="moyun">墨韵</option>
+            <option value="dushi">都市</option>
+            <option value="ocean">海洋</option>
+            <option value="starnight">星空</option>
+        </select>
+        <button onclick="generate()">生成 HTML</button>
+    </div>
+    
+    <div class="box">
+        <h3>生成的 HTML（复制这个到微信）</h3>
+        <textarea id="output"></textarea>
+    </div>
+    
+    <div class="box">
+        <h3>预览效果</h3>
+        <div id="preview"></div>
+    </div>
+    
+    <script>
+        function generate() {
+            const input = document.getElementById('input').value;
+            const theme = document.getElementById('theme').value;
+            
+            // 简单 Markdown 转换
+            let html = input
+                .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+                .replace(/^---$/gm, '<hr>')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/^(?!<[hbe]|<hr)(.+)$/gm, '<p>$1</p>');
+            
+            // 使用 themes.js 的函数
+            const result = generateWechatHtmlGlobal(html, theme);
+            
+            document.getElementById('output').value = result;
+            document.getElementById('preview').innerHTML = result;
+            document.getElementById('preview').className = 'wechat-content ' + theme;
+        }
+    </script>
+</body>
+</html>

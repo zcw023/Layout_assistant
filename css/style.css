@@ -1,0 +1,2123 @@
+/* ============================================
+   微信公众号排版助手 - 设计系统 v2.0
+   设计师视角：留白、层次、色彩、呼吸感
+   ============================================ */
+
+/* ---- 基础重置 ---- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* 系统色彩 */
+    --primary: #1a1a1a;
+    --bg-app: #f8f7f4;
+    --bg-panel: #ffffff;
+    --border: rgba(0,0,0,0.06);
+    --text-main: #1a1a1a;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+    
+    /* 字体栈 */
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-app);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ============================================
+   应用容器
+   ============================================ */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* ============================================
+   顶部工具栏 - 极简风格
+   ============================================ */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo-text {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text-main);
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* ---- 按钮设计系统 ---- */
+.upload-btn,
+.copy-btn,
+.reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.2px;
+}
+
+.upload-btn {
+    background: #f2f2f2;
+    color: #444;
+}
+
+.upload-btn:hover {
+    background: #e8e8e8;
+    transform: translateY(-1px);
+}
+
+.copy-btn {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.reset-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.reset-btn:hover {
+    background: #fafafa;
+    color: var(--text-main);
+}
+
+.theme-selector {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    background: white;
+    color: var(--text-main);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.theme-selector:focus {
+    border-color: rgba(0,0,0,0.2);
+}
+
+/* ============================================
+   主编辑区 - 左右分栏
+   ============================================ */
+.editor-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.input-panel,
+.preview-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-panel);
+}
+
+.input-panel {
+    flex: 1;
+    min-width: 320px;
+    border-right: 1px solid var(--border);
+}
+
+.preview-panel {
+    flex: 1.2;
+    min-width: 400px;
+    background: #faf9f7;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(250,250,250,0.8);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+}
+
+.editor-mode-bar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.9);
+}
+
+.mode-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    border-color: rgba(0,0,0,0.16);
+    color: var(--text-main);
+}
+
+.mode-btn.active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.feishu-editor {
+    flex: 1;
+    margin: 0;
+    padding: 20px 24px;
+    overflow: auto;
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-main);
+    white-space: normal;
+    word-break: break-word;
+}
+
+.feishu-editor:empty:before {
+    content: attr(data-placeholder);
+    white-space: pre-wrap;
+    color: var(--text-muted);
+}
+
+.panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.file-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 6px;
+    border-radius: 6px;
+    opacity: 0.6;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.05);
+}
+
+/* ============================================
+   编辑器样式 - 简洁专业
+   ============================================ */
+#editor {
+    flex: 1;
+    width: 100%;
+    padding: 32px;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.9;
+    resize: none;
+    background: #fefefe;
+    color: #2a2a2a;
+    tab-size: 2;
+}
+
+#editor::placeholder {
+    color: #bbb;
+    font-style: italic;
+}
+
+/* ============================================
+   预览区 - 真实公众号效果
+   ============================================ */
+.preview-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 40px;
+    background: linear-gradient(180deg, #f5f4f2 0%, #faf9f7 100%);
+    /* 确保滚动条正常工作 */
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 预览区的横向滚动 */
+.preview-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.preview-wrapper::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.preview-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+.preview-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3);
+}
+
+.wechat-content {
+    max-width: 680px;
+    min-height: 800px;
+    margin: 0 auto;
+    padding: 60px 50px;
+    background: #ffffff;
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.02),
+        0 10px 40px rgba(0,0,0,0.06);
+    border-radius: 4px;
+    /* 防止内容溢出 */
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+/* 内容内层包装 */
+.wechat-content .content-inner {
+    /* 确保所有子元素都不会溢出 */
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 预览优化：第一行不要“空一行”（去掉首个块元素的顶部外边距） */
+.wechat-content .content-inner > :first-child {
+    margin-top: 0 !important;
+}
+
+/* ============================================
+   全局溢出保护 - 防止任何内容溢出预览框
+   ============================================ */
+
+/* 确保内容内层不超出容器 */
+.wechat-content .content-inner {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+/* 所有块级元素限制宽度 */
+.wechat-content .content-inner > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* 特别处理可能导致溢出的元素 */
+.wechat-content .content-inner img,
+.wechat-content .content-inner video,
+.wechat-content .content-inner iframe,
+.wechat-content .content-inner object,
+.wechat-content .content-inner embed {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+/* 预格式化文本保留格式但允许滚动 */
+.wechat-content .content-inner pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 表格允许横向滚动 */
+.wechat-content .content-inner table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* 占位符 */
+.placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: #ccc;
+    text-align: center;
+}
+
+.placeholder-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+}
+
+.placeholder-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #aaa;
+}
+
+/* ============================================
+   底部状态栏
+   ============================================ */
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 28px;
+    background: rgba(255,255,255,0.9);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    backdrop-filter: blur(10px);
+}
+
+.status-left {
+    display: flex;
+    gap: 24px;
+    font-weight: 500;
+}
+
+.status-center .tip {
+    color: var(--text-secondary);
+}
+
+/* ============================================
+   Toast 提示
+   ============================================ */
+.toast {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    padding: 14px 28px;
+    background: rgba(30,30,30,0.95);
+    color: white;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ============================================
+   ============================================
+   主题系统 - 设计师精心打造
+   ============================================
+   ============================================ */
+
+/* ============================================
+   主题一：[晨露] 极简奶油风
+   温暖、柔和、治愈，适合生活方式类文章
+   ============================================ */
+.wechat-content.chenlu {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.9;
+    color: #3d3d3d;
+    background: #fffdfa;
+}
+
+.wechat-content.chenlu h1 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 48px 0 28px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid #f0ebe3;
+    letter-spacing: -0.5px;
+    line-height: 1.3;
+}
+
+.wechat-content.chenlu h2 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    color: #2c2c2c;
+    margin: 40px 0 20px;
+    padding-left: 16px;
+    border-left: 3px solid #d4c4b0;
+    letter-spacing: -0.3px;
+}
+
+.wechat-content.chenlu h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #3d3d3d;
+    margin: 28px 0 14px;
+}
+
+.wechat-content.chenlu p {
+    margin: 18px 0;
+    text-align: justify;
+    text-justify: inter-ideograph;
+    hyphens: auto;
+}
+
+.wechat-content.chenlu strong {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.wechat-content.chenlu em {
+    font-style: italic;
+    color: #555;
+}
+
+.wechat-content.chenlu a {
+    color: #8b7355;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(139,115,85,0.3);
+    transition: border-color 0.2s;
+}
+
+.wechat-content.chenlu a:hover {
+    border-bottom-color: #8b7355;
+}
+
+.wechat-content.chenlu blockquote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background: linear-gradient(135deg, #faf8f5 0%, #f5f2ed 100%);
+    border-radius: 12px;
+    border-left: none;
+    color: #5a5a5a;
+    font-style: italic;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+.wechat-content.chenlu blockquote::before {
+    content: '"';
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 48px;
+    color: #d4c4b0;
+    font-family: Georgia, serif;
+    line-height: 1;
+    opacity: 0.6;
+}
+
+.wechat-content.chenlu blockquote p {
+    margin: 0;
+    padding-left: 24px;
+}
+
+.wechat-content.chenlu code {
+    font-family: var(--font-mono);
+    background: #f5f2ed;
+    color: #8b6914;
+    padding: 3px 8px;
+    border-radius: 5px;
+    font-size: 0.88em;
+}
+
+.wechat-content.chenlu pre {
+    background: #f8f6f3;
+    padding: 24px;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 24px 0;
+    border: 1px solid #f0ebe3;
+}
+
+.wechat-content.chenlu pre code {
+    background: none;
+    padding: 0;
+    color: #444;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.wechat-content.chenlu ul,
+.wechat-content.chenlu ol {
+    margin: 20px 0;
+    padding-left: 2.2em;
+}
+
+.wechat-content.chenlu li {
+    margin: 10px 0;
+    padding-left: 4px;
+}
+
+.wechat-content.chenlu li::marker {
+    color: #c4b5a0;
+}
+
+.wechat-content.chenlu img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 32px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.wechat-content.chenlu hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e8e2d9, transparent);
+    margin: 48px 0;
+}
+
+.wechat-content.chenlu table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 28px 0;
+    font-size: 14px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.wechat-content.chenlu th {
+    background: #f5f2ed;
+    color: #3d3d3d;
+    font-weight: 600;
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 2px solid #e8e2d9;
+}
+
+.wechat-content.chenlu td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0ebe3;
+}
+
+.wechat-content.chenlu tr:last-child td {
+    border-bottom: none;
+}
+
+/* ============================================
+   主题二：[墨韵] 东方美学
+   宣纸质感、书卷气息，适合文化、读书类文章
+   ============================================ */
+.wechat-content.moyun {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Serif SC", serif;
+    font-size: 16.5px;
+    line-height: 2;
+    color: #2c2c2c;
+    background: #fcfcfa;
+}
+
+.wechat-content.moyun h1 {
+    font-family: "Noto Serif SC", "Source Han Serif SC", serif;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin: 52px 0 32px;
+    text-align: center;
+    letter-spacing: 2px;
+    position: relative;
+    padding-bottom: 24px;
+}
+
+.wechat-content.moyun h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, #8b4513, transparent);
+    border-radius: 2px;
+}
+
+.wechat-content.moyun h2 {
+    font-family: "Noto Serif SC", serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #2d2d2d;
+    margin: 44px 0 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e0dcd5;
+    letter-spacing: 1px;
+}
+
+.wechat-content.moyun h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #3d3d3d;
+    margin: 28px 0 16px;
+}
+
+.wechat-content.moyun p {
+    margin: 20px 0;
+    text-indent: 2em;
+    text-align: justify;
+}
+
+.wechat-content.moyun p:first-of-type {
+    text-indent: 0;
+}
+
+.wechat-content.moyun p:first-of-type::first-letter {
+    font-size: 3em;
+    float: left;
+    line-height: 1;
+    margin-right: 8px;
+    margin-top: -4px;
+    font-weight: 700;
+    color: #8b4513;
+}
+
+.wechat-content.moyun strong {
+    font-weight: 700;
+    color: #1a1a1a;
+}
+
+.wechat-content.moyun a {
+    color: #8b4513;
+    text-decoration: none;
+    border-bottom: 1px dashed #b8956a;
+}
+
+.wechat-content.moyun blockquote {
+    margin: 32px 20px;
+    padding: 24px 28px;
+    background: #f9f7f4;
+    border: 1px solid #e8e2d9;
+    border-radius: 4px;
+    color: #555;
+    font-style: normal;
+    position: relative;
+}
+
+.wechat-content.moyun blockquote::before {
+    content: '「';
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    font-size: 32px;
+    color: #d0c8bc;
+    line-height: 1;
+}
+
+.wechat-content.moyun blockquote p {
+    text-indent: 0;
+    margin: 0;
+}
+
+.wechat-content.moyun code {
+    font-family: "Noto Sans SC", monospace;
+    background: #f2f0ec;
+    color: #6b5637;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.85em;
+}
+
+.wechat-content.moyun pre {
+    background: #f7f5f1;
+    padding: 20px 24px;
+    border-radius: 4px;
+    margin: 24px 0;
+    border: 1px solid #ebe7e0;
+}
+
+.wechat-content.moyun pre code {
+    background: none;
+    padding: 0;
+    color: #444;
+}
+
+.wechat-content.moyun ul,
+.wechat-content.moyun ol {
+    margin: 20px 0;
+    padding-left: 2.5em;
+}
+
+.wechat-content.moyun li {
+    margin: 8px 0;
+}
+
+.wechat-content.moyun li::marker {
+    color: #a08060;
+}
+
+.wechat-content.moyun img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 36px auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+
+.wechat-content.moyun hr {
+    border: none;
+    height: 1px;
+    background: repeating-linear-gradient(
+        90deg,
+        #d0c8bc,
+        #d0c8bc 6px,
+        transparent 6px,
+        transparent 12px
+    );
+    margin: 48px 0;
+}
+
+/* ============================================
+   主题三：[都市] 杂志编辑风
+   时尚、大胆、层次感强，适合商业、科技、时尚类
+   ============================================ */
+.wechat-content.dushi {
+    font-family: var(--font-body);
+    font-size: 15.5px;
+    line-height: 1.75;
+    color: #1a1a1a;
+    background: #ffffff;
+}
+
+.wechat-content.dushi h1 {
+    font-family: var(--font-display);
+    font-size: 36px;
+    font-weight: 800;
+    color: #000;
+    margin: 40px 0 28px;
+    line-height: 1.2;
+    letter-spacing: -1px;
+    text-transform: uppercase;
+}
+
+.wechat-content.dushi h2 {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: #000;
+    margin: 40px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 3px solid #000;
+    display: inline-block;
+}
+
+.wechat-content.dushi h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: #333;
+    margin: 28px 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.wechat-content.dushi p {
+    margin: 16px 0;
+    text-align: left;
+}
+
+.wechat-content.dushi strong {
+    font-weight: 700;
+    color: #000;
+    background: linear-gradient(transparent 60%, #ffeb3b 60%);
+    padding: 0 2px;
+}
+
+.wechat-content.dushi a {
+    color: #000;
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+    font-weight: 600;
+}
+
+.wechat-content.dushi blockquote {
+    margin: 32px 0;
+    padding: 24px 28px;
+    background: #000;
+    color: #fff;
+    border-radius: 0;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.6;
+    letter-spacing: 0.3px;
+}
+
+.wechat-content.dushi blockquote p {
+    margin: 0;
+}
+
+.wechat-content.dushi code {
+    font-family: var(--font-mono);
+    background: #f0f0f0;
+    color: #e91e63;
+    padding: 3px 8px;
+    border-radius: 0;
+    font-size: 0.9em;
+    font-weight: 500;
+}
+
+.wechat-content.dushi pre {
+    background: #1a1a1a;
+    padding: 24px;
+    margin: 24px 0;
+    overflow-x: auto;
+}
+
+.wechat-content.dushi pre code {
+    background: none;
+    color: #f5f5f5;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.wechat-content.dushi ul,
+.wechat-content.dushi ol {
+    margin: 20px 0;
+    padding-left: 1.8em;
+}
+
+.wechat-content.dushi li {
+    margin: 8px 0;
+}
+
+.wechat-content.dushi li::marker {
+    color: #000;
+    font-weight: 700;
+}
+
+.wechat-content.dushi img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 32px auto;
+}
+
+.wechat-content.dushi hr {
+    border: none;
+    height: 4px;
+    background: #000;
+    margin: 40px 0;
+}
+
+.wechat-content.dushi table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+}
+
+.wechat-content.dushi th {
+    background: #000;
+    color: #fff;
+    font-weight: 600;
+    padding: 14px 16px;
+    text-align: left;
+}
+
+.wechat-content.dushi td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+/* ============================================
+   主题四：[森系] 自然治愈风
+   森林绿、温暖木质，适合旅行、生活、环保类
+   ============================================ */
+.wechat-content.senxi {
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.9;
+    color: #2d3a2d;
+    background: #fafbf7;
+}
+
+.wechat-content.senxi h1 {
+    font-family: var(--font-display);
+    font-size: 29px;
+    font-weight: 600;
+    color: #1a3d1a;
+    margin: 44px 0 24px;
+    letter-spacing: -0.5px;
+    position: relative;
+    padding-bottom: 16px;
+}
+
+.wechat-content.senxi h1::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, #4a7c59, #8fbc8f);
+    border-radius: 2px;
+}
+
+.wechat-content.senxi h2 {
+    font-size: 21px;
+    font-weight: 600;
+    color: #2d5a3d;
+    margin: 36px 0 18px;
+    padding-left: 14px;
+    border-left: 4px solid #4a7c59;
+}
+
+.wechat-content.senxi h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #3d6b4d;
+    margin: 26px 0 14px;
+}
+
+.wechat-content.senxi p {
+    margin: 18px 0;
+    text-align: justify;
+}
+
+.wechat-content.senxi strong {
+    font-weight: 600;
+    color: #1a3d1a;
+}
+
+.wechat-content.senxi a {
+    color: #4a7c59;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(74,124,89,0.4);
+    transition: all 0.2s;
+}
+
+.wechat-content.senxi a:hover {
+    border-bottom-color: #4a7c59;
+}
+
+.wechat-content.senxi blockquote {
+    margin: 28px 0;
+    padding: 22px 26px;
+    background: linear-gradient(135deg, #f1f5f1 0%, #e8f0e8 100%);
+    border-radius: 16px;
+    border: 1px solid #d0e0d0;
+    color: #4a5d4a;
+    position: relative;
+}
+
+.wechat-content.senxi blockquote::before {
+    content: '🌿';
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    font-size: 24px;
+    background: #fafbf7;
+    padding: 0 8px;
+}
+
+.wechat-content.senxi blockquote p {
+    margin: 0;
+}
+
+.wechat-content.senxi code {
+    font-family: var(--font-mono);
+    background: #e8f0e8;
+    color: #2d5a3d;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.88em;
+}
+
+.wechat-content.senxi pre {
+    background: #2d4a3d;
+    padding: 22px;
+    border-radius: 16px;
+    margin: 24px 0;
+    overflow-x: auto;
+}
+
+.wechat-content.senxi pre code {
+    background: none;
+    color: #e8f5e8;
+    padding: 0;
+    font-size: 13px;
+}
+
+.wechat-content.senxi ul,
+.wechat-content.senxi ol {
+    margin: 20px 0;
+    padding-left: 2.2em;
+}
+
+.wechat-content.senxi li {
+    margin: 10px 0;
+}
+
+.wechat-content.senxi li::marker {
+    color: #4a7c59;
+}
+
+.wechat-content.senxi img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 32px auto;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(45,74,45,0.15);
+}
+
+.wechat-content.senxi hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #b8d4b8, transparent);
+    margin: 44px 0;
+}
+
+/* ============================================
+   主题五：[极夜] 深色高级风
+   深色背景、霓虹强调，适合科技、设计、极客类
+   ============================================ */
+.wechat-content.jiye {
+    font-family: var(--font-body);
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: #e0e0e0;
+    background: #0d1117;
+}
+
+.wechat-content.jiye h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    color: #f0f0f0;
+    margin: 44px 0 24px;
+    letter-spacing: -0.5px;
+    background: linear-gradient(90deg, #58a6ff, #a371f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.wechat-content.jiye h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #f0f0f0;
+    margin: 36px 0 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #30363d;
+}
+
+.wechat-content.jiye h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: #c9d1d9;
+    margin: 28px 0 12px;
+}
+
+.wechat-content.jiye p {
+    margin: 16px 0;
+    color: #b0b8c4;
+}
+
+.wechat-content.jiye strong {
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.wechat-content.jiye a {
+    color: #58a6ff;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(88,166,255,0.3);
+}
+
+.wechat-content.jiye a:hover {
+    border-bottom-color: #58a6ff;
+}
+
+.wechat-content.jiye blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: #161b22;
+    border-left: 4px solid #58a6ff;
+    border-radius: 0 8px 8px 0;
+    color: #8b949e;
+}
+
+.wechat-content.jiye code {
+    font-family: var(--font-mono);
+    background: #21262d;
+    color: #ff7b72;
+    padding: 3px 8px;
+    border-radius: 6px;
+    font-size: 0.88em;
+}
+
+.wechat-content.jiye pre {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 24px 0;
+    border: 1px solid #30363d;
+    overflow-x: auto;
+}
+
+.wechat-content.jiye pre code {
+    background: none;
+    color: #c9d1d9;
+    padding: 0;
+    font-size: 13px;
+    line-height: 1.7;
+}
+
+.wechat-content.jiye ul,
+.wechat-content.jiye ol {
+    margin: 20px 0;
+    padding-left: 2em;
+}
+
+.wechat-content.jiye li {
+    margin: 8px 0;
+    color: #b0b8c4;
+}
+
+.wechat-content.jiye li::marker {
+    color: #58a6ff;
+}
+
+.wechat-content.jiye img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.wechat-content.jiye hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #30363d, transparent);
+    margin: 40px 0;
+}
+
+.wechat-content.jiye table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+}
+
+.wechat-content.jiye th {
+    background: #161b22;
+    color: #f0f0f0;
+    font-weight: 600;
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 2px solid #30363d;
+}
+
+.wechat-content.jiye td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #21262d;
+    color: #b0b8c4;
+}
+
+/* ============================================
+   滚动条样式
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.25);
+}
+
+/* ============================================
+   响应式适配
+   ============================================ */
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 10px 16px;
+    }
+    
+    .toolbar-actions {
+        gap: 8px;
+    }
+    
+    .upload-btn,
+    .copy-btn,
+    .reset-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+    
+    .editor-container {
+        flex-direction: column;
+    }
+    
+    .input-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        min-height: 200px;
+    }
+    
+    .preview-panel {
+        min-height: 300px;
+    }
+    
+    #editor {
+        padding: 20px;
+    }
+    
+    .preview-wrapper {
+        padding: 20px;
+    }
+    
+    .wechat-content {
+        padding: 40px 24px;
+    }
+}
+
+/* ============================================
+   图片样式 - 确保正确显示
+   ============================================ */
+.wechat-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 20px auto !important;
+}
+
+/* ============================================
+   防止内容溢出 - 关键修复
+   ============================================ */
+
+/* 所有主题下的文本元素都要防止溢出 */
+.wechat-content p,
+.wechat-content div,
+.wechat-content span,
+.wechat-content li,
+.wechat-content td,
+.wechat-content th,
+.wechat-content blockquote {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+/* URL 和代码不要在中间断开 */
+.wechat-content a,
+.wechat-content code {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+/* 代码块横向滚动，不要换行 */
+.wechat-content pre {
+    overflow-x: auto;
+    white-space: pre-wrap;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.wechat-content pre code {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+/* 表格处理 */
+.wechat-content table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+.wechat-content td,
+.wechat-content th {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+/* 长URL处理 */
+.wechat-content a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+
+/* ============================================
+   新增主题样式
+   ============================================ */
+
+/* 国潮 · 新中式 */
+.wechat-content.guochao {
+    font-family: "Noto Serif SC", "Source Han Serif SC", "PingFang SC", serif;
+    font-size: 16px;
+    line-height: 2;
+    color: #2b2b2b;
+    background: #fefefe;
+}
+.wechat-content.guochao h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #8b0000;
+    margin: 48px 0 24px;
+    text-align: center;
+    letter-spacing: 4px;
+    border-bottom: 3px double #8b0000;
+    padding-bottom: 16px;
+}
+.wechat-content.guochao h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin: 36px 0 18px;
+    padding-left: 20px;
+    border-left: 4px solid #c41e3a;
+}
+.wechat-content.guochao img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 4px;
+    border: 1px solid #e0e0e0;
+    padding: 4px;
+    background: #fff;
+}
+.wechat-content.guochao blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, #f5f5f5 0%, #fafafa 100%);
+    border-left: 4px solid #c41e3a;
+    color: #555;
+    font-style: italic;
+}
+.wechat-content.guochao hr {
+    border: none;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, #c41e3a, #c41e3a 6px, transparent 6px, transparent 12px);
+    margin: 40px 0;
+}
+
+/* 侘寂 · 日式极简 */
+.wechat-content.wabi {
+    font-family: "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+    font-size: 15px;
+    line-height: 2;
+    color: #4a4a4a;
+    background: #fafafa;
+}
+.wechat-content.wabi h1 {
+    font-size: 26px;
+    font-weight: 400;
+    color: #1a1a1a;
+    margin: 48px 0 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #d0d0d0;
+    letter-spacing: 2px;
+    text-align: center;
+}
+.wechat-content.wabi h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    margin: 40px 0 20px;
+    letter-spacing: 1px;
+}
+.wechat-content.wabi img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 32px auto;
+    border-radius: 2px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.wechat-content.wabi blockquote {
+    margin: 32px 0;
+    padding: 24px;
+    color: #666;
+    border-left: 2px solid #999;
+    font-size: 14px;
+    line-height: 2.2;
+}
+.wechat-content.wabi hr {
+    border: none;
+    border-top: 1px solid #e0e0e0;
+    margin: 48px 20%;
+}
+
+/* 赛博 · 未来科技 */
+.wechat-content.cyber {
+    font-family: "Courier New", "SF Mono", monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #0ff;
+    background: #0a0a0a;
+    text-shadow: 0 0 5px rgba(0,255,255,0.5);
+}
+.wechat-content.cyber h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #f0f;
+    margin: 40px 0 24px;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    border-left: 4px solid #f0f;
+    padding-left: 16px;
+}
+.wechat-content.cyber h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #ff0;
+    margin: 32px 0 16px;
+    letter-spacing: 2px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 8px;
+}
+.wechat-content.cyber p {
+    color: #ccc;
+}
+.wechat-content.cyber strong {
+    font-weight: 700;
+    color: #f0f;
+    background: rgba(255,0,255,0.1);
+    padding: 0 4px;
+}
+.wechat-content.cyber blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    background: rgba(0,255,255,0.05);
+    border: 1px solid #0ff;
+    color: #0ff;
+}
+.wechat-content.cyber img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 24px auto;
+    border: 2px solid #0ff;
+    box-shadow: 0 0 10px rgba(0,255,255,0.3);
+}
+.wechat-content.cyber code {
+    font-family: monospace;
+    background: #111;
+    color: #0ff;
+    padding: 2px 6px;
+    border: 1px solid #333;
+}
+.wechat-content.cyber pre {
+    background: #111;
+    padding: 16px;
+    border: 1px solid #0ff;
+    margin: 20px 0;
+    overflow-x: auto;
+}
+.wechat-content.cyber hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #0ff, transparent);
+    margin: 32px 0;
+}
+
+/* 胶片 · 复古怀旧 */
+.wechat-content.vintage {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 16px;
+    line-height: 1.8;
+    color: #3d3d3d;
+    background: #f4f1ea;
+}
+.wechat-content.vintage h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #2c241b;
+    margin: 44px 0 24px;
+    text-align: center;
+    border: 3px double #8b7355;
+    padding: 20px;
+}
+.wechat-content.vintage h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #4a3f35;
+    margin: 36px 0 18px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #a0826d;
+}
+.wechat-content.vintage img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border: 8px solid #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    filter: sepia(15%);
+}
+.wechat-content.vintage blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: #ebe5d9;
+    border-left: 4px solid #8b7355;
+    color: #5a4d3c;
+    font-style: italic;
+}
+.wechat-content.vintage hr {
+    border: none;
+    border-top: 2px dotted #a0826d;
+    margin: 40px 0;
+}
+
+/* 手绘 · 插画风格 */
+.wechat-content.sketch {
+    font-family: "Comic Sans MS", "Chalkboard SE", "Marker Felt", cursive;
+    font-size: 16px;
+    line-height: 1.9;
+    color: #333;
+    background: #fffef8;
+}
+.wechat-content.sketch h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #e74c3c;
+    margin: 44px 0 24px;
+    transform: rotate(-1deg);
+    text-shadow: 2px 2px 0 #ffeaa7;
+}
+.wechat-content.sketch h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #2d3436;
+    margin: 36px 0 18px;
+    padding: 8px 16px;
+    background: #ffeaa7;
+    display: inline-block;
+    transform: rotate(0.5deg);
+    border-radius: 4px;
+}
+.wechat-content.sketch img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border: 4px solid #2d3436;
+    border-radius: 8px;
+    transform: rotate(-0.5deg);
+    box-shadow: 4px 4px 0 rgba(0,0,0,0.1);
+}
+.wechat-content.sketch blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: #fff;
+    border: 3px solid #dfe6e9;
+    border-radius: 12px;
+    transform: rotate(0.3deg);
+}
+.wechat-content.sketch hr {
+    border: none;
+    height: 4px;
+    background: repeating-linear-gradient(90deg, #e74c3c, #e74c3c 8px, transparent 8px, transparent 12px);
+    margin: 36px 0;
+    transform: rotate(0.2deg);
+}
+
+/* 商务 · 极简专业 */
+.wechat-content.biz {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #ffffff;
+}
+.wechat-content.biz h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #16213e;
+    margin: 40px 0 24px;
+    padding-bottom: 16px;
+    border-bottom: 3px solid #0f3460;
+    letter-spacing: -0.5px;
+}
+.wechat-content.biz h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #0f3460;
+    margin: 32px 0 16px;
+}
+.wechat-content.biz h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #533483;
+    margin: 24px 0 12px;
+}
+.wechat-content.biz p {
+    color: #4a4a4a;
+}
+.wechat-content.biz blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    background: #f8f9fa;
+    border-left: 4px solid #0f3460;
+    color: #555;
+}
+.wechat-content.biz hr {
+    border: none;
+    border-top: 1px solid #e9ecef;
+    margin: 32px 0;
+}
+
+/* 清新 · 文艺自然 */
+.wechat-content.fresh {
+    font-family: "PingFang SC", "Hiragino Sans GB", -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    color: #495057;
+    background: #f8f9fa;
+}
+.wechat-content.fresh h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #343a40;
+    margin: 44px 0 24px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #adb5bd;
+    font-family: "STSong", "SimSun", serif;
+}
+.wechat-content.fresh h2 {
+    font-size: 20px;
+    font-weight: 500;
+    color: #495057;
+    margin: 36px 0 16px;
+    padding-left: 12px;
+    border-left: 3px solid #74c0fc;
+}
+.wechat-content.fresh h3 {
+    font-size: 17px;
+    font-weight: 500;
+    color: #4dabf7;
+    margin: 24px 0 10px;
+}
+.wechat-content.fresh strong {
+    font-weight: 600;
+    color: #212529;
+    background: #e7f5ff;
+    padding: 0 4px;
+    border-radius: 2px;
+}
+.wechat-content.fresh blockquote {
+    margin: 28px 0;
+    padding: 20px 24px;
+    background: #e7f5ff;
+    border-radius: 8px;
+    color: #1864ab;
+    font-size: 15px;
+}
+.wechat-content.fresh img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.wechat-content.fresh hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #adb5bd, transparent);
+    margin: 40px 0;
+}
+
+/* 工业 · 硬核机能 */
+.wechat-content.industrial {
+    font-family: "Roboto Mono", "SF Mono", monospace;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #d4d4d4;
+    background: #1e1e1e;
+}
+.wechat-content.industrial h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #ff6b6b;
+    margin: 40px 0 24px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    border: 2px solid #495057;
+    padding: 16px;
+    display: inline-block;
+}
+.wechat-content.industrial h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #4ecdc4;
+    margin: 32px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #495057;
+    letter-spacing: 1px;
+}
+.wechat-content.industrial h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: #ffe66d;
+    margin: 24px 0 10px;
+}
+.wechat-content.industrial p {
+    color: #adb5bd;
+}
+.wechat-content.industrial strong {
+    font-weight: 700;
+    color: #ff6b6b;
+    background: #2d3436;
+    padding: 0 4px;
+}
+.wechat-content.industrial blockquote {
+    margin: 24px 0;
+    padding: 16px 20px;
+    background: #2d3436;
+    border-left: 4px solid #4ecdc4;
+    color: #b2bec3;
+}
+.wechat-content.industrial img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 24px auto;
+    border: 2px solid #495057;
+    filter: grayscale(30%) contrast(110%);
+}
+.wechat-content.industrial code {
+    font-family: monospace;
+    background: #2d3436;
+    color: #ff6b6b;
+    padding: 2px 6px;
+    border: 1px solid #495057;
+}
+.wechat-content.industrial pre {
+    background: #2d3436;
+    padding: 16px;
+    border: 1px solid #495057;
+    margin: 20px 0;
+    overflow-x: auto;
+    color: #d4d4d4;
+}
+.wechat-content.industrial hr {
+    border: none;
+    height: 2px;
+    background: #495057;
+    margin: 32px 0;
+}
+
+/* ============================================
+   SVG 装饰主题
+   ============================================ */
+
+/* 海洋波浪 */
+.wechat-content.ocean {
+    font-family: "Quicksand", "PingFang SC", sans-serif;
+    font-size: 16px;
+    line-height: 1.9;
+    color: #2c3e50;
+    background: linear-gradient(180deg, #f0f9ff 0%, #e0f2fe 100%);
+}
+.wechat-content.ocean h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #0e7490;
+    margin: 40px 0 24px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 20px;
+}
+.wechat-content.ocean h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #0891b2;
+    margin: 32px 0 16px;
+    padding-left: 16px;
+    border-left: 4px solid #22d3ee;
+}
+.wechat-content.ocean strong {
+    font-weight: 700;
+    color: #0e7490;
+    background: linear-gradient(180deg, transparent 60%, #a5f3fc 60%);
+    padding: 0 4px;
+}
+.wechat-content.ocean blockquote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background: rgba(224, 242, 254, 0.6);
+    border-radius: 16px;
+    border: 2px solid #7dd3fc;
+    color: #0c4a6e;
+}
+.wechat-content.ocean img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(14, 116, 144, 0.15);
+}
+.wechat-content.ocean hr {
+    border: none;
+    height: 40px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 60" preserveAspectRatio="none"><path d="M0,30 Q300,0 600,30 T1200,30" fill="none" stroke="%2322d3ee" stroke-width="3"/></svg>') center/contain no-repeat;
+    margin: 32px 0;
+}
+
+/* 星空夜语 */
+.wechat-content.starnight {
+    font-family: "Space Grotesk", "PingFang SC", sans-serif;
+    font-size: 15px;
+    line-height: 1.8;
+    color: #e2e8f0;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+}
+.wechat-content.starnight h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #fbbf24;
+    margin: 40px 0 24px;
+    text-align: center;
+    text-shadow: 0 0 20px rgba(251, 191, 36, 0.3);
+    letter-spacing: 1px;
+}
+.wechat-content.starnight h2 {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fcd34d;
+    margin: 32px 0 16px;
+    padding-left: 20px;
+    border-left: 3px solid #fbbf24;
+}
+.wechat-content.starnight p {
+    color: #cbd5e1;
+}
+.wechat-content.starnight strong {
+    font-weight: 700;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.wechat-content.starnight blockquote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 12px;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    color: #e2e8f0;
+}
+.wechat-content.starnight img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 8px;
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    box-shadow: 0 0 30px rgba(251, 191, 36, 0.1);
+}
+.wechat-content.starnight hr {
+    border: none;
+    height: 24px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 24"><circle cx="20" cy="12" r="2" fill="%23fbbf24"/><circle cx="50" cy="8" r="1.5" fill="%23fcd34d"/><circle cx="80" cy="12" r="2" fill="%23fbbf24"/><circle cx="35" cy="16" r="1" fill="%23fff"/><circle cx="65" cy="6" r="1" fill="%23fff"/></svg>') center/contain no-repeat;
+    margin: 32px 0;
+}
+
+/* 自然森语 */
+.wechat-content.nature {
+    font-family: "Nunito", "PingFang SC", sans-serif;
+    font-size: 16px;
+    line-height: 1.85;
+    color: #365314;
+    background: #fafcf5;
+}
+.wechat-content.nature h1 {
+    font-size: 30px;
+    font-weight: 700;
+    color: #3f6212;
+    margin: 40px 0 24px;
+    text-align: center;
+    position: relative;
+    padding-bottom: 16px;
+}
+.wechat-content.nature h2 {
+    font-size: 21px;
+    font-weight: 600;
+    color: #4d7c0f;
+    margin: 32px 0 16px;
+    padding-left: 16px;
+    border-left: 4px solid #84cc16;
+}
+.wechat-content.nature strong {
+    font-weight: 700;
+    color: #3f6212;
+    background: linear-gradient(180deg, transparent 60%, #bef264 60%);
+    padding: 0 4px;
+}
+.wechat-content.nature blockquote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background: #f0fdf4;
+    border-radius: 16px;
+    border: 2px solid #86efac;
+    color: #365314;
+}
+.wechat-content.nature img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(101, 163, 13, 0.15);
+}
+.wechat-content.nature hr {
+    border: none;
+    height: 32px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 32"><path d="M10,16 Q25,5 40,16 T70,16 T100,16 T130,16 T160,16 T190,16" fill="none" stroke="%2386efac" stroke-width="2"/><circle cx="20" cy="16" r="3" fill="%2384cc16"/><circle cx="180" cy="16" r="3" fill="%2384cc16"/></svg>') center/contain no-repeat;
+    margin: 32px 0;
+}
+
+/* 几何线条 */
+.wechat-content.geometric {
+    font-family: "Inter", "PingFang SC", sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: #1e293b;
+    background: #fafafa;
+}
+.wechat-content.geometric h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 40px 0 24px;
+    text-align: center;
+    letter-spacing: -0.5px;
+    text-transform: uppercase;
+}
+.wechat-content.geometric h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #334155;
+    margin: 32px 0 16px;
+    padding-left: 0;
+    border-bottom: 2px solid #6366f1;
+    display: inline-block;
+    padding-bottom: 4px;
+}
+.wechat-content.geometric strong {
+    font-weight: 700;
+    color: #1e293b;
+    background: #e0e7ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+.wechat-content.geometric blockquote {
+    margin: 28px 0;
+    padding: 24px 28px;
+    background: #f8fafc;
+    border-radius: 4px;
+    border-left: 4px solid #6366f1;
+    color: #475569;
+}
+.wechat-content.geometric img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 28px auto;
+    border-radius: 4px;
+    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+}
+.wechat-content.geometric hr {
+    border: none;
+    height: 24px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 24"><rect x="10" y="10" width="8" height="8" fill="%236366f1" transform="rotate(45 14 14)"/><rect x="96" y="10" width="8" height="8" fill="%23818cf8" transform="rotate(45 100 14)"/><rect x="182" y="10" width="8" height="8" fill="%236366f1" transform="rotate(45 186 14)"/><line x1="25" y1="14" x2="90" y2="14" stroke="%23cbd5e1" stroke-width="1"/><line x1="110" y1="14" x2="175" y2="14" stroke="%23cbd5e1" stroke-width="1"/></svg>') center/contain no-repeat;
+    margin: 32px 0;
+}

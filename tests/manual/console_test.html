@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>控制台测试</title>
+    <script src="js/themes.js"></script>
+</head>
+<body>
+    <h1>打开控制台查看测试结果 (F12)</h1>
+    <script>
+        console.log('=== 主题测试 ===');
+        console.log('WECHAT_THEMES 存在:', typeof WECHAT_THEMES !== 'undefined');
+        if (typeof WECHAT_THEMES !== 'undefined') {
+            console.log('所有主题:', Object.keys(WECHAT_THEMES));
+            console.log('dushi 主题:', WECHAT_THEMES.dushi ? '存在' : '不存在');
+            if (WECHAT_THEMES.dushi) {
+                console.log('dushi.h1:', WECHAT_THEMES.dushi.h1);
+                console.log('dushi.container:', WECHAT_THEMES.dushi.container);
+            }
+        }
+        
+        // 直接测试生成
+        const html = '<h1>标题</h1><p>正文<strong>加粗</strong></p>';
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        console.log('DOM 解析结果:', doc.body.innerHTML);
+        console.log('body children:', doc.body.children.length);
+        console.log('first child tag:', doc.body.children[0]?.tagName);
+    </script>
+</body>
+</html>
