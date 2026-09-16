@@ -8,7 +8,7 @@
 
 ## 0 · 项目定位
 
-- **一句话定位**：微信公众号排版助手——把 Markdown / Word / 飞书文档转成带内联样式的公众号排版并一键复制；给内容创作者（用户本人）用；纯静态前端，浏览器本地运行，数据不上传。
+- **一句话定位**：微信公众号排版助手——把 Markdown / Word / 飞书文档转成带内联样式的公众号排版并一键复制；给内容创作者（用户本人）用；纯静态前端，浏览器本地运行，数据不上传；设计支持静态托管部署（GitHub Pages / Netlify / Vercel / CDN / Nginx），曾见 `layout-assistant.zhaocw0023.cn` 部署痕迹（当前状态待确认）。
 - **交付形态**（可多选；多端产品的初始端在创建时勾选，后续端通过架构变更长出）：
   - ☑ 本地应用——**纯静态 Web 工具形态**：无服务端、无打包产物，本地 HTTP 服务（或直接开 HTML）即交付；`single-file.html` 为单文件分发形态
   - ☐ 移动应用（APK）
@@ -41,7 +41,7 @@ layout-assistant/
 ├── css/style.css         # 界面样式（编辑器/工具栏，非微信内容样式）
 ├── js/app.js             # 应用逻辑：解析、预览、主题应用、复制、快捷键
 ├── js/themes.js          # WECHAT_THEMES 主题数据（9 款，内联样式）
-├── single-file.html      # 单文件简化版（自包含，CDN 引库，独立维护形态）
+├── single-file.html      # 单文件自包含形态（18 款主题，含拆分版未有的 9 款；两形态已分叉，见 decisions/002）
 ├── docs/                 # 上游文档（INDEX / DEVELOPER_GUIDE）
 ├── scripts/              # start.sh / verify.sh
 ├── project-docs/         # 文档体系（本目录）

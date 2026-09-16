@@ -7,7 +7,7 @@
 | 文件 | 职责 | 依赖 |
 |---|---|---|
 | `index.html` | 页面壳：工具栏（上传/主题选择/复制/重置）+ 双模式编辑区 + 预览区 + 状态栏；CSP meta 在此 | css/style.css、js/themes.js、js/app.js、CDN 五库 |
-| `single-file.html` | 单文件分发形态：HTML+CSS+JS 自包含，仅 CDN 外链；与主形态**无代码共享**，独立维护 | 仅 CDN |
+| `single-file.html` | 单文件分发形态：HTML+CSS+JS 自包含，仅 CDN 外链；与主形态**无代码共享**，独立维护；**18 款主题（拆分版仅 9 款，见 decisions/002）** | 仅 CDN |
 
 ## 主形态内部分工
 

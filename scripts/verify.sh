@@ -14,10 +14,13 @@ echo "== 1/3 关键文件完整性 =="
 for f in index.html css/style.css js/app.js js/themes.js single-file.html \
          LICENSE README.md \
          project-docs/CONSTITUTION.md project-docs/STATUS.md \
-         project-docs/system/README.md project-docs/decisions/001-技术栈与交付形态.md \
+         project-docs/system/README.md \
          scripts/start.sh scripts/verify.sh; do
   [ -f "$f" ] && pass "$f" || fail "缺 $f"
 done
+# 决策档案: 目录至少一份 (新增 decision 无需改本清单)
+[ -n "$(ls project-docs/decisions/*.md 2>/dev/null)" ] \
+  && pass "decisions/ 存在决策档案" || fail "decisions/ 无决策档案"
 
 echo "== 2/3 静态引用一致性 =="
 # index.html 引用的本地资源必须存在 (只认 src=/href= 属性里的相对路径, 排除 CDN URL)
