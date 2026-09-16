@@ -1,0 +1,2027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>微信公众号排版助手 - 简化版</title>
+
+    <!-- 引入第三方库 -->
+    <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.11/dist/clipboard.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+    <style>
+/* ============================================
+   微信公众号排版助手 - 样式表
+   ============================================ */
+
+/* ---- 基础重置 ---- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #1a1a1a;
+    --bg-app: #f8f7f4;
+    --bg-panel: #ffffff;
+    --border: rgba(0,0,0,0.06);
+    --text-main: #1a1a1a;
+    --text-secondary: #666666;
+    --text-muted: #999999;
+
+    --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --font-mono: "SF Mono", "Monaco", "Inconsolata", "Fira Code", monospace;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-app);
+    color: var(--text-main);
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* 应用容器 */
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+/* 顶部工具栏 */
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-icon {
+    font-size: 24px;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+.logo-text {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--text-main);
+}
+
+.toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 按钮设计 */
+.upload-btn,
+.copy-btn,
+.reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.2px;
+}
+
+.upload-btn {
+    background: #f2f2f2;
+    color: #444;
+}
+
+.upload-btn:hover {
+    background: #e8e8e8;
+    transform: translateY(-1px);
+}
+
+.copy-btn {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.copy-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+}
+
+.reset-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+}
+
+.reset-btn:hover {
+    background: #fafafa;
+    color: var(--text-main);
+}
+
+.theme-selector {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: var(--font-body);
+    background: white;
+    color: var(--text-main);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.theme-selector:focus {
+    border-color: rgba(0,0,0,0.2);
+}
+
+/* 主编辑区 */
+.editor-container {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.input-panel,
+.preview-panel {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-panel);
+}
+
+.input-panel {
+    flex: 1;
+    min-width: 320px;
+    border-right: 1px solid var(--border);
+}
+
+.preview-panel {
+    flex: 1.2;
+    min-width: 400px;
+    background: #faf9f7;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 24px;
+    background: rgba(250,250,250,0.8);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+}
+
+.editor-mode-bar {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.9);
+}
+
+.mode-btn {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: #ffffff;
+    color: var(--text-secondary);
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    border-color: rgba(0,0,0,0.16);
+    color: var(--text-main);
+}
+
+.mode-btn.active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.feishu-editor {
+    flex: 1;
+    margin: 0;
+    padding: 20px 24px;
+    overflow: auto;
+    outline: none;
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text-main);
+    white-space: normal;
+    word-break: break-word;
+}
+
+.feishu-editor:empty:before {
+    content: attr(data-placeholder);
+    white-space: pre-wrap;
+    color: var(--text-muted);
+}
+
+.panel-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.file-info {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* 编辑器样式 */
+#editor {
+    flex: 1;
+    width: 100%;
+    padding: 32px;
+    border: none;
+    outline: none;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    line-height: 1.9;
+    resize: none;
+    background: #fefefe;
+    color: #2a2a2a;
+    tab-size: 2;
+}
+
+#editor::placeholder {
+    color: #bbb;
+    font-style: italic;
+}
+
+/* 预览区 */
+.preview-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 40px;
+    background: linear-gradient(180deg, #f5f4f2 0%, #faf9f7 100%);
+    overflow-x: auto;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.preview-wrapper::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.preview-wrapper::-webkit-scrollbar-track {
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+.preview-wrapper::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 4px;
+}
+
+.preview-wrapper::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.3);
+}
+
+.wechat-content {
+    max-width: 680px;
+    min-height: 800px;
+    margin: 0 auto;
+    padding: 60px 50px;
+    background: #ffffff;
+    box-shadow:
+        0 1px 3px rgba(0,0,0,0.02),
+        0 10px 40px rgba(0,0,0,0.06);
+    border-radius: 4px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+}
+
+.wechat-content .content-inner {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.wechat-content .content-inner > :first-child {
+    margin-top: 0 !important;
+}
+
+.wechat-content .content-inner {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+}
+
+.wechat-content .content-inner > * {
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.wechat-content .content-inner img,
+.wechat-content .content-inner video,
+.wechat-content .content-inner iframe,
+.wechat-content .content-inner object,
+.wechat-content .content-inner embed {
+    max-width: 100% !important;
+    height: auto !important;
+}
+
+.wechat-content .content-inner pre {
+    max-width: 100%;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.wechat-content .content-inner table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* 占位符 */
+.placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 400px;
+    color: #ccc;
+    text-align: center;
+}
+
+.placeholder-icon {
+    font-size: 56px;
+    margin-bottom: 20px;
+    opacity: 0.4;
+}
+
+.placeholder-text {
+    font-size: 14px;
+    line-height: 1.8;
+    color: #aaa;
+}
+
+/* 底部状态栏 */
+.status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 28px;
+    background: rgba(255,255,255,0.9);
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    backdrop-filter: blur(10px);
+}
+
+.status-left {
+    display: flex;
+    gap: 24px;
+    font-weight: 500;
+}
+
+.status-center .tip {
+    color: var(--text-secondary);
+}
+
+/* Toast 提示 */
+.toast {
+    position: fixed;
+    top: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    padding: 14px 28px;
+    background: rgba(30,30,30,0.95);
+    color: white;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.toast.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.15);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(0,0,0,0.25);
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+    .toolbar {
+        padding: 10px 16px;
+    }
+
+    .toolbar-actions {
+        gap: 8px;
+    }
+
+    .upload-btn,
+    .copy-btn,
+    .reset-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .editor-container {
+        flex-direction: column;
+    }
+
+    .input-panel {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        min-height: 200px;
+    }
+
+    .preview-panel {
+        min-height: 300px;
+    }
+
+    #editor {
+        padding: 20px;
+    }
+
+    .preview-wrapper {
+        padding: 20px;
+    }
+
+    .wechat-content {
+        padding: 40px 24px;
+    }
+}
+
+/* 图片样式 */
+.wechat-content img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 20px auto !important;
+}
+
+/* 防止内容溢出 */
+.wechat-content p,
+.wechat-content div,
+.wechat-content span,
+.wechat-content li,
+.wechat-content td,
+.wechat-content th,
+.wechat-content blockquote {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+    word-break: break-word;
+}
+
+.wechat-content a,
+.wechat-content code {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+.wechat-content pre {
+    overflow-x: auto;
+    white-space: pre-wrap;
+    max-width: 100%;
+    word-break: break-word;
+}
+
+.wechat-content pre code {
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.wechat-content table {
+    max-width: 100%;
+    overflow-x: auto;
+    display: block;
+}
+
+.wechat-content td,
+.wechat-content th {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.wechat-content a {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部工具栏 -->
+        <header class="toolbar">
+            <div class="logo">
+                <span class="logo-icon">📝</span>
+                <span class="logo-text">微信公众号排版助手</span>
+            </div>
+            <div class="toolbar-actions">
+                <label class="upload-btn" for="file-upload">
+                    <span>📄 上传文档</span>
+                    <input type="file" id="file-upload" accept=".docx,.md,.txt,.markdown" hidden>
+                </label>
+                <select id="theme-select" class="theme-selector">
+                    <optgroup label="经典主题">
+                        <option value="chenlu">晨露 · 极简奶油</option>
+                        <option value="dushi">都市 · 杂志编辑</option>
+                        <option value="senxi">森系 · 自然治愈</option>
+                    </optgroup>
+                    <optgroup label="新增风格（待筛选）">
+                        <option value="keji">墨蓝 · 科技商务</option>
+                        <option value="jinshe">金奢 · 品牌高级</option>
+                        <option value="nuanyang">暖阳 · 活力橙</option>
+                        <option value="zijie">字节 · 清爽高效</option>
+                        <option value="pingguo">苹果 · 发布会极简</option>
+                        <option value="saibo">赛博 · 霓虹未来</option>
+                        <option value="shuzhai">书摘 · 阅读笔记</option>
+                        <option value="baogao">数据 · 研究报告</option>
+                    </optgroup>
+                    <optgroup label="特色风格">
+                        <option value="youyu">鱿鱼风 · 黑白杂志</option>
+                        <option value="guochao">国潮 · 新中式</option>
+                        <option value="wabi">侘寂 · 日式极简</option>
+                        <option value="vintage">胶片 · 复古怀旧</option>
+                        <option value="sketch">手绘 · 插画风格</option>
+                        <option value="fresh">清新 · 文艺自然</option>
+                        <option value="industrial">工业 · 硬核机能</option>
+                    </optgroup>
+                </select>
+                <button id="copy-btn" class="copy-btn">
+                    <span>📋 一键复制</span>
+                </button>
+                <button id="reset-btn" class="reset-btn">
+                    <span>🔄 重置</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主编辑区 -->
+        <main class="editor-container">
+            <!-- 左侧：输入区 -->
+            <div class="input-panel">
+                <div class="panel-header">
+                    <span class="panel-title">📝 编辑 / 粘贴 Markdown</span>
+                    <span class="file-info" id="file-info">未选择文件</span>
+                </div>
+                <div class="editor-mode-bar">
+                    <button type="button" class="mode-btn active" data-mode="markdown">Markdown</button>
+                    <button type="button" class="mode-btn" data-mode="feishu">飞书文档</button>
+                </div>
+
+                <textarea id="editor" placeholder="在此粘贴内容，或点击上方上传文档...
+
+✨ 支持：
+• Markdown 语法
+• 飞书/语雀文档（直接复制粘贴，保留图片）
+• Word 文档上传
+
+⌨️ 快捷键：
+• Cmd+A 全选 | Cmd+Enter 复制到微信
+• Cmd+K 清空 | Cmd+1~5 快速切换主题"># 这是一级标题
+
+## 二级标题：排版之美
+
+### 三级标题：探索 Markdown 的魅力
+
+这是一段普通的正文文字。Markdown 是一种轻量级标记语言，它允许你使用易读易写的纯文本格式编写文档，然后转换成结构化的 HTML 文档。
+
+**这是加粗的文字**，用于强调重要内容。
+
+*这是斜体的文字*，用于表示特殊含义或引用。
+
+***这是加粗且斜体的文字***，三重强调效果。
+
+~~这是删除线文字~~，表示废弃或过时的内容。
+
+---
+
+## 列表展示
+
+### 无序列表
+
+- 第一章：初识 Markdown
+- 第二章：基础语法入门
+  - 2.1 标题与段落
+  - 2.2 文字样式
+  - 2.3 列表使用
+- 第三章：进阶技巧
+
+### 有序列表
+
+1. 准备工作环境
+2. 安装必要软件
+3. 配置编辑器
+   1. 选择主题配色
+   2. 设置字体大小
+   3. 开启自动保存
+4. 开始创作
+
+---
+
+## 引用与强调
+
+> 这是一段引用文字。可以用来展示名人名言、重要提示或者补充说明。
+>
+> 引用可以有多行，并且支持 **加粗** 和 *斜体* 等样式。
+
+> 💡 **温馨提示**：不同主题下，引用块的样式会有很大差异，试试切换主题看看吧！
+
+---
+
+## 代码展示
+
+行内代码：`console.log('Hello World')`
+
+代码块示例：
+
+\`\`\`javascript
+// JavaScript 示例
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+
+console.log(greet('Markdown'));
+\`\`\`
+
+\`\`\`python
+# Python 示例
+def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(f"第10项: {fibonacci(10)}")
+\`\`\`
+
+---
+
+## 表格展示
+
+| 功能特性 | 晨露主题 | 都市主题 | 森系主题 |
+|:---------|:--------:|:--------:|:--------:|
+| 标题样式 | 优雅下划线 | 粗黑现代 | 渐变下划线 |
+| 引用样式 | 柔和圆角 | 纯黑底白字 | 绿色渐变 |
+| 代码高亮 | 暖色背景 | 对比强烈 | 深绿背景 |
+| 适用场景 | 生活随笔 | 商业报告 | 环保旅行 |
+
+---
+
+## 链接与图片
+
+### 文字链接
+
+[访问 GitHub](https://github.com) | [Markdown 指南](https://www.markdownguide.org) | [微信编辑器](https://mp.weixin.qq.com)
+
+### 图片展示
+
+![示例图片](https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop)
+
+*图片来自 Unsplash，用于测试图片排版效果*
+
+---
+
+## 任务清单
+
+- [x] 学习 Markdown 基础语法
+- [x] 掌握标题和段落排版
+- [x] 练习列表和表格制作
+- [ ] 探索更多高级用法
+- [ ] 创作第一篇公众号文章
+
+---
+
+## 分割线效果
+
+下面是一条分割线：
+
+---
+
+分割线用于分隔文章的不同部分，让内容更有层次感。
+
+---
+
+## 综合排版练习
+
+> 📚 **学习建议**
+>
+> 1. 先熟悉基础语法（标题、加粗、斜体）
+> 2. 尝试不同主题的视觉效果
+> 3. 练习使用快捷键提高效率
+> 4. 多复制到微信编辑器预览效果
+
+**现在你可以：**
+- 切换不同主题，观察排版变化
+- 使用 Cmd+Enter 快速复制到微信
+- 修改内容，练习 Markdown 语法
+- 清空后尝试自己创作
+
+---
+
+*祝你排版愉快！🎉*</textarea>
+
+                <!-- 飞书富文本模式 -->
+                <div id="feishu-editor" class="feishu-editor" contenteditable="true" spellcheck="false" hidden
+                     data-placeholder="在这里粘贴飞书文档内容（支持图片/表格/列表）。&#10;&#10;提示：如果你在 Markdown 模式粘贴到飞书富文本，会自动切换到这里。"></div>
+            </div>
+
+            <!-- 右侧：预览区 -->
+            <div class="preview-panel">
+                <div class="panel-header">
+                    <span class="panel-title">👁️ 微信预览</span>
+                    <div class="preview-actions">
+                    </div>
+                </div>
+                <div class="preview-wrapper" id="preview-wrapper">
+                    <div id="preview-content" class="wechat-content chenlu">
+                        <div class="placeholder">
+                            <div class="placeholder-icon">✨</div>
+                            <div class="placeholder-text">
+                                在左侧粘贴内容或上传文件<br>
+                                精美的排版预览将在这里呈现
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部状态栏 -->
+        <footer class="status-bar">
+            <div class="status-left">
+                <span id="char-count">字符数: 0</span>
+                <span id="word-count">字数: 0</span>
+            </div>
+            <div class="status-center">
+                <span class="tip">💡 Cmd+Enter 复制 | Cmd+K 清空 | Cmd+1-5 切换主题</span>
+            </div>
+            <div class="status-right">
+                <span id="copy-status"></span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 提示消息 -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+// ============================================================
+// 主题配置 - 微信兼容的内联样式
+// ============================================================
+const WECHAT_THEMES = {
+    // 晨露 · 极简奶油
+    chenlu: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;font-size:16px;line-height:1.9;color:#3d3d3d;',
+        h1: 'font-size:28px;font-weight:600;color:#1a1a1a;margin:48px 0 28px;padding-bottom:16px;border-bottom:2px solid #f0ebe3;letter-spacing:-0.5px;line-height:1.3;',
+        h2: 'font-size:21px;font-weight:600;color:#2c2c2c;margin:40px 0 20px;padding-left:16px;border-left:3px solid #d4c4b0;letter-spacing:-0.3px;',
+        h3: 'font-size:17px;font-weight:600;color:#3d3d3d;margin:28px 0 14px;',
+        p: 'margin:18px 0;text-align:justify;text-justify:inter-ideograph;',
+        strong: 'font-weight:600;color:#1a1a1a;',
+        em: 'font-style:italic;color:#555;',
+        blockquote: 'margin:28px 0;padding:24px 28px;border:1px solid #f0ebe3;border-left:4px solid #d4c4b0;border-radius:12px;color:#5a5a5a;font-style:italic;',
+        img: 'max-width:100%;height:auto;display:block;margin:32px auto;border-radius:12px;',
+        a: 'color:#8b7355;text-decoration:none;border-bottom:1px solid #d4c4b0;',
+        code: 'font-family:SF Mono,Monaco,"Cascadia Code",monospace;border:1px solid #f0ebe3;color:#8b6914;padding:3px 8px;border-radius:5px;font-size:0.88em;',
+        pre: 'padding:24px;border-radius:12px;overflow-x:auto;margin:24px 0;border:1px solid #f0ebe3;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,"Cascadia Code",monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:20px 0;padding-left:2.2em;',
+        ol: 'margin:20px 0;padding-left:2.2em;',
+        li: 'margin:10px 0;padding-left:4px;',
+        table: 'width:100%;border-collapse:separate;border-spacing:0;margin:28px 0;font-size:14px;',
+        th: 'color:#3d3d3d;font-weight:600;padding:14px 16px;text-align:left;border-bottom:2px solid #e8e2d9;',
+        td: 'padding:12px 16px;border-bottom:1px solid #f0ebe3;',
+        hr: 'border:none;border-top:1px solid #e8e2d9;margin:48px 0;'
+    },
+
+    // 都市 · 杂志编辑
+    dushi: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;font-size:15.5px;line-height:1.75;color:#1a1a1a;',
+        h1: 'font-size:36px;font-weight:800;color:#000;margin:40px 0 28px;line-height:1.2;letter-spacing:-1px;text-transform:uppercase;',
+        h2: 'font-size:22px;font-weight:700;color:#000;margin:40px 0 16px;padding-bottom:8px;border-bottom:3px solid #000;display:inline-block;',
+        h3: 'font-size:16px;font-weight:700;color:#333;margin:28px 0 12px;text-transform:uppercase;letter-spacing:0.5px;',
+        p: 'margin:16px 0;',
+        strong: 'font-weight:700;color:#000;border-bottom:3px solid #ffeb3b;padding-bottom:1px;',
+        em: 'font-style:italic;',
+        blockquote: 'margin:32px 0;padding:24px 28px;border:2px solid #000;border-left:6px solid #000;color:#111;font-size:18px;font-weight:500;line-height:1.6;',
+        img: 'max-width:100%;height:auto;display:block;margin:32px auto;',
+        a: 'color:#000;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:3px;font-weight:600;',
+        code: 'font-family:SF Mono,Monaco,monospace;border:1px solid #000;color:#e91e63;padding:3px 8px;border-radius:0;font-size:0.9em;font-weight:500;',
+        pre: 'padding:24px;margin:24px 0;border:2px solid #000;color:#111;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.6;',
+        ul: 'margin:20px 0;padding-left:1.8em;',
+        ol: 'margin:20px 0;padding-left:1.8em;',
+        li: 'margin:8px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:24px 0;font-size:14px;',
+        th: 'color:#000;font-weight:700;padding:14px 16px;text-align:left;border-bottom:2px solid #000;',
+        td: 'padding:12px 16px;border-bottom:1px solid #e0e0e0;',
+        hr: 'border:none;border-top:4px solid #000;margin:40px 0;'
+    },
+
+    // 森系 · 自然治愈
+    senxi: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;font-size:16px;line-height:1.9;color:#2d3a2d;',
+        h1: 'font-size:29px;font-weight:600;color:#1a3d1a;margin:44px 0 24px;padding-bottom:16px;border-bottom:4px solid #4a7c59;letter-spacing:-0.5px;',
+        h2: 'font-size:21px;font-weight:600;color:#2d5a3d;margin:36px 0 18px;padding-left:14px;border-left:4px solid #4a7c59;',
+        h3: 'font-size:17px;font-weight:600;color:#3d6b4d;margin:26px 0 14px;',
+        p: 'margin:18px 0;text-align:justify;',
+        strong: 'font-weight:600;color:#1a3d1a;',
+        em: 'font-style:italic;color:#4a5d4a;',
+        blockquote: 'margin:28px 0;padding:22px 26px;border-radius:16px;border:1px solid #d0e0d0;border-left:4px solid #4a7c59;color:#4a5d4a;',
+        img: 'max-width:100%;height:auto;display:block;margin:32px auto;border-radius:20px;',
+        a: 'color:#4a7c59;text-decoration:none;border-bottom:1px solid #b8d4b8;',
+        code: 'font-family:SF Mono,Monaco,monospace;border:1px solid #b8d4b8;color:#2d5a3d;padding:3px 8px;border-radius:6px;font-size:0.88em;',
+        pre: 'padding:22px;border-radius:16px;margin:24px 0;border:1px solid #b8d4b8;color:#2d3a2d;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;',
+        ul: 'margin:20px 0;padding-left:2.2em;',
+        ol: 'margin:20px 0;padding-left:2.2em;',
+        li: 'margin:10px 0;',
+        hr: 'border:none;border-top:2px solid #b8d4b8;margin:44px 0;'
+    },
+
+    // 鱿鱼风 · 黑白杂志（参考「鱿鱼的AI笔记」：大留白、粗黑标题、英文小标、拉页式引言）
+    youyu: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","PingFang SC","Hiragino Sans GB",sans-serif;font-size:16px;line-height:1.9;color:#1f1f1f;letter-spacing:0.4px;',
+        h1: 'font-size:32px;font-weight:800;color:#000;margin:56px 0 32px;line-height:1.35;letter-spacing:2px;',
+        h2: 'font-size:24px;font-weight:800;color:#000;margin:64px 0 24px;padding-top:20px;border-top:4px solid #000;line-height:1.4;letter-spacing:2px;',
+        h3: 'font-size:17px;font-weight:700;color:#000;margin:40px 0 14px;letter-spacing:0.5px;line-height:1.6;',
+        p: 'margin:22px 0;text-align:justify;text-justify:inter-ideograph;',
+        strong: 'font-weight:700;color:#000;',
+        em: 'font-style:italic;color:#555;',
+        blockquote: 'margin:36px 0;padding:26px 4px;border-top:1px solid #e6e6e6;border-bottom:1px solid #e6e6e6;color:#000;font-size:17px;font-weight:600;line-height:2;',
+        img: 'max-width:100%;height:auto;display:block;margin:36px auto;',
+        a: 'color:#000;text-decoration:underline;text-underline-offset:4px;font-weight:600;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f5f5f5;color:#c7254e;padding:3px 8px;font-size:0.88em;',
+        pre: 'padding:24px;margin:28px 0;background:#f7f7f7;border:1px solid #ececec;color:#1f1f1f;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.8;',
+        ul: 'margin:24px 0;padding-left:1.6em;',
+        ol: 'margin:24px 0;padding-left:1.6em;',
+        li: 'margin:12px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:32px 0;font-size:14px;',
+        th: 'color:#000;font-weight:700;padding:14px 16px;text-align:left;border-bottom:2px solid #000;',
+        td: 'padding:12px 16px;border-bottom:1px solid #eee;',
+        hr: 'border:none;border-top:1px solid #e6e6e6;margin:56px 0;'
+    },
+
+    // 国潮 · 新中式
+    guochao: {
+        container: 'font-family:"Noto Serif SC","Source Han Serif SC","PingFang SC",serif;font-size:16px;line-height:2;color:#2b2b2b;',
+        h1: 'font-size:32px;font-weight:700;color:#8b0000;margin:48px 0 24px;text-align:center;letter-spacing:4px;border-bottom:3px double #8b0000;padding-bottom:16px;',
+        h2: 'font-size:22px;font-weight:600;color:#1a1a1a;margin:36px 0 18px;padding-left:20px;border-left:4px solid #c41e3a;',
+        h3: 'font-size:18px;font-weight:600;color:#4a4a4a;margin:24px 0 12px;',
+        p: 'margin:16px 0;text-align:justify;text-indent:2em;',
+        strong: 'font-weight:700;color:#8b0000;',
+        em: 'font-style:italic;color:#666;',
+        blockquote: 'margin:28px 0;padding:20px 24px;border:1px solid #e0e0e0;border-left:4px solid #c41e3a;color:#555;font-style:italic;',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border-radius:4px;border:1px solid #e0e0e0;padding:4px;',
+        a: 'color:#8b0000;text-decoration:none;border-bottom:1px solid #c41e3a;',
+        code: 'font-family:monospace;border:1px solid #e0e0e0;color:#8b4513;padding:2px 6px;border-radius:3px;font-size:0.9em;',
+        pre: 'padding:20px;border:1px solid #e0e0e0;margin:20px 0;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px;line-height:1.6;',
+        ul: 'margin:20px 0;padding-left:2.5em;',
+        ol: 'margin:20px 0;padding-left:2.5em;',
+        li: 'margin:10px 0;',
+        hr: 'border:none;border-top:2px dashed #c41e3a;margin:40px 0;'
+    },
+
+    // 侘寂 · 日式极简
+    wabi: {
+        container: 'font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",sans-serif;font-size:15px;line-height:2;color:#4a4a4a;',
+        h1: 'font-size:26px;font-weight:400;color:#1a1a1a;margin:48px 0 32px;padding-bottom:24px;border-bottom:1px solid #d0d0d0;letter-spacing:2px;text-align:center;',
+        h2: 'font-size:18px;font-weight:500;color:#333;margin:40px 0 20px;letter-spacing:1px;',
+        h3: 'font-size:15px;font-weight:500;color:#555;margin:28px 0 12px;letter-spacing:0.5px;',
+        p: 'margin:20px 0;',
+        strong: 'font-weight:600;color:#1a1a1a;',
+        em: 'font-style:italic;color:#777;',
+        blockquote: 'margin:32px 0;padding:24px;color:#666;border-left:2px solid #999;font-size:14px;line-height:2.2;',
+        img: 'max-width:100%;height:auto;display:block;margin:32px auto;border-radius:2px;box-shadow:0 2px 8px rgba(0,0,0,0.08);',
+        a: 'color:#333;text-decoration:none;border-bottom:1px solid #999;padding-bottom:2px;',
+        code: 'font-family:monospace;border:1px solid #e8e8e8;color:#555;padding:2px 4px;font-size:0.85em;',
+        pre: 'padding:20px;border-radius:2px;margin:20px 0;border:1px solid #e8e8e8;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px;line-height:2;',
+        ul: 'margin:20px 0;padding-left:1.5em;list-style-type:"・";',
+        ol: 'margin:20px 0;padding-left:1.5em;',
+        li: 'margin:12px 0;color:#555;',
+        hr: 'border:none;border-top:1px solid #e0e0e0;margin:48px 20%;'
+    },
+
+    // 胶片 · 复古怀旧
+    vintage: {
+        container: 'font-family:"Georgia","Times New Roman",serif;font-size:16px;line-height:1.8;color:#3d3d3d;',
+        h1: 'font-size:30px;font-weight:700;color:#2c241b;margin:44px 0 24px;text-align:center;border:3px double #8b7355;padding:20px;',
+        h2: 'font-size:22px;font-weight:600;color:#4a3f35;margin:36px 0 18px;padding-bottom:8px;border-bottom:2px solid #a0826d;',
+        h3: 'font-size:18px;font-weight:600;color:#5c4d3c;margin:24px 0 12px;font-style:italic;',
+        p: 'margin:16px 0;text-align:justify;',
+        strong: 'font-weight:700;color:#2c241b;',
+        em: 'font-style:italic;color:#6b5b4f;',
+        blockquote: 'margin:28px 0;padding:20px 24px;border:1px solid #d0c8b8;border-left:4px solid #8b7355;color:#5a4d3c;font-style:italic;',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border:8px solid #fff;box-shadow:0 4px 15px rgba(0,0,0,0.15);filter:sepia(15%);',
+        a: 'color:#8b4513;text-decoration:none;border-bottom:1px solid #a0826d;',
+        code: 'font-family:monospace;border:1px solid #d0c8b8;color:#5c4d3c;padding:2px 6px;font-size:0.9em;',
+        pre: 'padding:20px;border:1px solid #d0c8b8;margin:20px 0;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px;line-height:1.8;',
+        ul: 'margin:20px 0;padding-left:2em;',
+        ol: 'margin:20px 0;padding-left:2em;',
+        li: 'margin:10px 0;',
+        hr: 'border:none;border-top:2px dotted #a0826d;margin:40px 0;'
+    },
+
+    // 手绘 · 插画风格
+    sketch: {
+        container: 'font-family:"Comic Sans MS","Chalkboard SE","Marker Felt",cursive;font-size:16px;line-height:1.9;color:#333;',
+        h1: 'font-size:32px;font-weight:700;color:#e74c3c;margin:44px 0 24px;transform:rotate(-1deg);text-shadow:2px 2px 0 #ffeaa7;',
+        h2: 'font-size:22px;font-weight:600;color:#2d3436;margin:36px 0 18px;padding:8px 16px;border:2px solid #ffeaa7;display:inline-block;transform:rotate(0.5deg);border-radius:4px;',
+        h3: 'font-size:18px;font-weight:600;color:#636e72;margin:24px 0 12px;border-bottom:3px wavy #74b9ff;padding-bottom:4px;',
+        p: 'margin:16px 0;',
+        strong: 'font-weight:700;color:#d63031;border-bottom:3px solid #ffeaa7;padding-bottom:1px;',
+        em: 'font-style:italic;color:#6c5ce7;',
+        blockquote: 'margin:28px 0;padding:20px 24px;border:3px solid #dfe6e9;border-radius:12px;transform:rotate(0.3deg);',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border:4px solid #2d3436;border-radius:8px;transform:rotate(-0.5deg);box-shadow:4px 4px 0 rgba(0,0,0,0.1);',
+        a: 'color:#0984e3;text-decoration:none;border-bottom:3px solid #74b9ff;',
+        code: 'font-family:monospace;border:2px solid #dfe6e9;color:#2d3436;padding:2px 6px;border-radius:4px;font-size:0.9em;',
+        pre: 'padding:20px;border-radius:12px;margin:20px 0;border:3px solid #2d3436;color:#2d3436;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px;line-height:1.9;',
+        ul: 'margin:20px 0;padding-left:1.5em;',
+        ol: 'margin:20px 0;padding-left:1.5em;',
+        li: 'margin:10px 0;color:#2d3436;',
+        hr: 'border:none;height:4px;background:repeating-linear-gradient(90deg,#e74c3c,#e74c3c 8px,transparent 8px,transparent 12px);margin:36px 0;transform:rotate(0.2deg);'
+    },
+
+    // 清新 · 文艺自然
+    fresh: {
+        container: 'font-family:"PingFang SC","Hiragino Sans GB",-apple-system,sans-serif;font-size:16px;line-height:1.85;color:#495057;',
+        h1: 'font-size:28px;font-weight:600;color:#343a40;margin:44px 0 24px;padding-bottom:12px;border-bottom:2px solid #adb5bd;font-family:"STSong","SimSun",serif;',
+        h2: 'font-size:20px;font-weight:500;color:#495057;margin:36px 0 16px;padding-left:12px;border-left:3px solid #74c0fc;',
+        h3: 'font-size:17px;font-weight:500;color:#4dabf7;margin:24px 0 10px;',
+        p: 'margin:16px 0;',
+        strong: 'font-weight:600;color:#212529;border-bottom:2px solid #74c0fc;padding-bottom:1px;',
+        em: 'font-style:italic;color:#868e96;',
+        blockquote: 'margin:28px 0;padding:20px 24px;border:1px solid #bee9e8;border-left:4px solid #74c0fc;border-radius:8px;color:#1864ab;font-size:15px;',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.08);',
+        a: 'color:#1971c2;text-decoration:none;border-bottom:1px solid #74c0fc;',
+        code: 'font-family:monospace;border:1px solid #dee2e6;color:#c2255c;padding:2px 6px;border-radius:4px;font-size:0.9em;',
+        pre: 'padding:20px;border-radius:8px;margin:20px 0;border:1px solid #bee9e8;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:monospace;font-size:13px;line-height:1.85;',
+        ul: 'margin:20px 0;padding-left:1.8em;',
+        ol: 'margin:20px 0;padding-left:1.8em;',
+        li: 'margin:10px 0;color:#495057;',
+        hr: 'border:none;border-top:1px solid #adb5bd;margin:40px 0;'
+    },
+
+    // 工业 · 硬核机能
+    industrial: {
+        container: 'font-family:"Roboto Mono","SF Mono",monospace;font-size:14px;line-height:1.75;color:#111827;letter-spacing:0.2px;',
+        h1: 'font-size:26px;font-weight:800;color:#111827;margin:40px 0 24px;text-transform:uppercase;letter-spacing:2px;border:2px solid #111827;border-left:12px solid #f59e0b;padding:14px 16px;display:inline-block;',
+        h2: 'font-size:18px;font-weight:800;color:#111827;margin:32px 0 16px;padding-left:14px;border-left:8px solid #f59e0b;letter-spacing:1px;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid rgba(17,24,39,0.35);',
+        h3: 'font-size:15px;font-weight:700;color:#374151;margin:24px 0 10px;text-transform:uppercase;letter-spacing:0.8px;',
+        p: 'margin:14px 0;color:#111827;',
+        strong: 'font-weight:800;color:#111827;border-bottom:3px solid rgba(245,158,11,0.9);padding-bottom:1px;',
+        em: 'font-style:italic;color:#4b5563;',
+        blockquote: 'margin:24px 0;padding:16px 20px;border:2px solid rgba(17,24,39,0.6);border-left:10px solid #f59e0b;color:#111827;',
+        img: 'max-width:100%;height:auto;display:block;margin:24px auto;border:2px solid #111827;filter:grayscale(35%) contrast(115%);',
+        a: 'color:#111827;text-decoration:none;border-bottom:2px dashed rgba(245,158,11,0.9);',
+        code: 'font-family:"Roboto Mono","SF Mono",monospace;border:1px solid rgba(17,24,39,0.6);color:#b91c1c;padding:2px 6px;font-size:0.9em;',
+        pre: 'padding:16px;border:2px solid rgba(17,24,39,0.6);border-left:10px solid #111827;margin:20px 0;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:#111827;font-family:"Roboto Mono","SF Mono",monospace;font-size:13px;line-height:1.75;',
+        ul: 'margin:16px 0;padding-left:2em;',
+        ol: 'margin:16px 0;padding-left:2em;',
+        li: 'margin:8px 0;color:#111827;',
+        hr: 'border:none;border-top:2px solid rgba(17,24,39,0.5);margin:32px 0;'
+    },
+
+    // 墨蓝 · 科技商务（签名：藏蓝左栏标题 + 深色代码块，正文克制）
+    keji: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;font-size:15.5px;line-height:1.85;color:#262626;',
+        h1: 'font-size:26px;font-weight:700;color:#14366b;margin:44px 0 22px;padding-bottom:14px;border-bottom:1px solid #d5dfe9;line-height:1.4;',
+        h2: 'font-size:20px;font-weight:700;color:#14366b;margin:38px 0 16px;padding-left:12px;border-left:4px solid #14366b;line-height:1.45;',
+        h3: 'font-size:16.5px;font-weight:600;color:#14366b;margin:26px 0 12px;',
+        p: 'margin:18px 0;text-align:justify;text-justify:inter-ideograph;',
+        strong: 'font-weight:700;color:#14366b;',
+        em: 'font-style:italic;color:#8c8c8c;',
+        blockquote: 'margin:26px 0;padding:18px 22px;background:#f5f8fc;border-left:3px solid #14366b;color:#3d4a5c;',
+        img: 'max-width:100%;height:auto;display:block;margin:30px auto;border-radius:6px;',
+        a: 'color:#2f6fd0;text-decoration:none;border-bottom:1px solid #b8cfe8;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#eef3f9;color:#14366b;padding:2px 7px;border-radius:4px;font-size:0.88em;',
+        pre: 'padding:22px;border-radius:8px;margin:26px 0;background:#16233a;color:#d6e0ec;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:20px 0;padding-left:1.8em;',
+        ol: 'margin:20px 0;padding-left:1.8em;',
+        li: 'margin:10px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:28px 0;font-size:14px;',
+        th: 'color:#14366b;font-weight:700;padding:12px 16px;text-align:left;border-bottom:2px solid #14366b;',
+        td: 'padding:12px 16px;border-bottom:1px solid #e8edf2;',
+        hr: 'border:none;border-top:1px solid #d5dfe9;margin:44px 0;'
+    },
+
+    // 金奢 · 品牌高级（签名：衬线居中标题 + 细金线，全程只用一条线说话）
+    jinshe: {
+        container: 'font-family:"Noto Serif SC","Songti SC","STSong",serif;font-size:15.5px;line-height:2;color:#3a3a3a;letter-spacing:0.5px;',
+        h1: 'font-size:26px;font-weight:700;color:#1a1a1a;margin:56px 0 28px;text-align:center;letter-spacing:4px;padding:18px 0;border-top:1px solid #a78b57;border-bottom:1px solid #a78b57;line-height:1.5;',
+        h2: 'font-size:19px;font-weight:600;color:#1a1a1a;margin:44px 0 20px;text-align:center;letter-spacing:3px;line-height:1.5;',
+        h3: 'font-size:16.5px;font-weight:600;color:#a78b57;margin:28px 0 14px;letter-spacing:1px;text-align:center;',
+        p: 'margin:20px 0;text-align:justify;text-justify:inter-ideograph;',
+        strong: 'font-weight:700;color:#8a6d3b;',
+        em: 'font-style:italic;color:#8a8a8a;',
+        blockquote: 'margin:40px 24px;padding:24px 0;border-top:1px solid #d6c3a0;border-bottom:1px solid #d6c3a0;color:#6b5a3a;text-align:center;font-size:16.5px;line-height:2.1;',
+        img: 'max-width:100%;height:auto;display:block;margin:36px auto;',
+        a: 'color:#8a6d3b;text-decoration:none;border-bottom:1px solid #d6c3a0;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#faf8f4;color:#8a6d3b;padding:2px 7px;font-size:0.88em;',
+        pre: 'padding:22px;margin:28px 0;background:#faf8f4;border:1px solid #e8e0d0;color:#3a3a3a;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.8;',
+        ul: 'margin:22px 0;padding-left:2em;',
+        ol: 'margin:22px 0;padding-left:2em;',
+        li: 'margin:12px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:32px 0;font-size:14px;',
+        th: 'color:#8a6d3b;font-weight:600;padding:13px 16px;text-align:left;border-bottom:1px solid #a78b57;letter-spacing:1px;',
+        td: 'padding:13px 16px;border-bottom:1px solid #efe9dd;',
+        hr: 'border:none;border-top:1px solid #d6c3a0;margin:52px 30%;'
+    },
+
+    // 暖阳 · 活力橙（签名：橙色粗标题 + 暖底引用，其余收敛）
+    nuanyang: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:15.5px;line-height:1.85;color:#333;',
+        h1: 'font-size:26px;font-weight:800;color:#d4540a;margin:44px 0 22px;line-height:1.4;',
+        h2: 'font-size:20px;font-weight:700;color:#d4540a;margin:36px 0 16px;padding-bottom:8px;border-bottom:2px solid #f0c9a8;line-height:1.45;',
+        h3: 'font-size:16.5px;font-weight:700;color:#d4540a;margin:26px 0 12px;',
+        p: 'margin:18px 0;',
+        strong: 'font-weight:700;color:#d4540a;',
+        em: 'font-style:italic;color:#999;',
+        blockquote: 'margin:26px 0;padding:18px 22px;background:#fdf6ee;border-left:3px solid #e8813a;border-radius:0 8px 8px 0;color:#6b4a2e;',
+        img: 'max-width:100%;height:auto;display:block;margin:30px auto;border-radius:12px;',
+        a: 'color:#d4540a;text-decoration:none;border-bottom:1px solid #f0c9a8;font-weight:600;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#fdf3ea;color:#b4450a;padding:2px 7px;border-radius:5px;font-size:0.88em;',
+        pre: 'padding:22px;border-radius:10px;margin:24px 0;background:#fdf9f4;border:1px solid #f0e0cd;color:#333;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:20px 0;padding-left:1.8em;',
+        ol: 'margin:20px 0;padding-left:1.8em;',
+        li: 'margin:10px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:28px 0;font-size:14px;',
+        th: 'color:#d4540a;font-weight:700;padding:12px 16px;text-align:left;border-bottom:2px solid #e8813a;',
+        td: 'padding:12px 16px;border-bottom:1px solid #f5e8d8;',
+        hr: 'border:none;border-top:1px solid #f0dcc4;margin:44px 0;'
+    },
+
+    // 字节 · 清爽高效（签名：蓝色左栏 + 浅灰底引用，现代互联网文档感）
+    zijie: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:15.5px;line-height:1.8;color:#1f2329;',
+        h1: 'font-size:26px;font-weight:700;color:#1f2329;margin:42px 0 22px;line-height:1.4;',
+        h2: 'font-size:20px;font-weight:600;color:#1f2329;margin:36px 0 16px;padding-left:12px;border-left:4px solid #3370ff;line-height:1.45;',
+        h3: 'font-size:16.5px;font-weight:600;color:#1f2329;margin:26px 0 12px;',
+        p: 'margin:16px 0;',
+        strong: 'font-weight:600;color:#1456f0;',
+        em: 'font-style:italic;color:#8f959e;',
+        blockquote: 'margin:24px 0;padding:18px 22px;background:#f5f6f7;border-radius:8px;color:#4e5560;',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border-radius:10px;',
+        a: 'color:#3370ff;text-decoration:none;font-weight:500;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f2f3f5;color:#d83931;padding:2px 7px;border-radius:5px;font-size:0.88em;',
+        pre: 'padding:20px;border-radius:10px;margin:24px 0;background:#f7f8fa;border:1px solid #e5e6eb;color:#1f2329;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:18px 0;padding-left:1.8em;',
+        ol: 'margin:18px 0;padding-left:1.8em;',
+        li: 'margin:9px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:26px 0;font-size:14px;',
+        th: 'color:#1f2329;background:#f2f3f5;font-weight:600;padding:12px 16px;text-align:left;',
+        td: 'padding:12px 16px;border-bottom:1px solid #e5e6eb;',
+        hr: 'border:none;border-top:1px solid #e5e6eb;margin:40px 0;'
+    },
+
+    // 苹果 · 发布会极简（签名：大字重标题 + 超大留白 + 居中金句，几乎零装饰）
+    pingguo: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",sans-serif;font-size:16px;line-height:1.9;color:#1d1d1f;',
+        h1: 'font-size:32px;font-weight:700;color:#1d1d1f;margin:56px 0 30px;line-height:1.25;letter-spacing:-0.5px;',
+        h2: 'font-size:24px;font-weight:600;color:#1d1d1f;margin:52px 0 20px;letter-spacing:-0.3px;line-height:1.35;',
+        h3: 'font-size:18px;font-weight:600;color:#1d1d1f;margin:32px 0 14px;',
+        p: 'margin:22px 0;',
+        strong: 'font-weight:600;color:#000;',
+        em: 'font-style:normal;color:#86868b;',
+        blockquote: 'margin:48px 16px;padding:0;color:#1d1d1f;font-size:20px;font-weight:600;line-height:1.7;text-align:center;',
+        img: 'max-width:100%;height:auto;display:block;margin:44px auto;border-radius:16px;',
+        a: 'color:#0066cc;text-decoration:none;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f5f5f7;color:#1d1d1f;padding:3px 9px;border-radius:8px;font-size:0.88em;',
+        pre: 'padding:26px;border-radius:16px;margin:32px 0;background:#f5f5f7;color:#1d1d1f;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:22px 0;padding-left:1.6em;',
+        ol: 'margin:22px 0;padding-left:1.6em;',
+        li: 'margin:12px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:36px 0;font-size:14px;',
+        th: 'color:#86868b;font-weight:500;padding:14px 16px;text-align:left;border-bottom:1px solid #d2d2d7;font-size:13px;',
+        td: 'padding:14px 16px;border-bottom:1px solid #f0f0f2;',
+        hr: 'border:none;border-top:1px solid #d2d2d7;margin:64px 0;'
+    },
+
+    // 赛博 · 霓虹未来（签名：深紫标题 + 一线青色，克制版未来感）
+    saibo: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:15.5px;line-height:1.85;color:#241f3a;',
+        h1: 'font-size:26px;font-weight:800;color:#4c1d95;margin:44px 0 22px;padding-bottom:14px;border-bottom:2px solid #4c1d95;line-height:1.4;letter-spacing:1px;',
+        h2: 'font-size:20px;font-weight:700;color:#4c1d95;margin:38px 0 16px;padding-bottom:6px;border-bottom:2px solid #22d3ee;display:inline-block;letter-spacing:1px;line-height:1.45;',
+        h3: 'font-size:16.5px;font-weight:700;color:#6d28d9;margin:26px 0 12px;letter-spacing:0.5px;',
+        p: 'margin:18px 0;',
+        strong: 'font-weight:700;color:#6d28d9;',
+        em: 'font-style:italic;color:#8a85a3;',
+        blockquote: 'margin:28px 0;padding:18px 22px;background:#f8f6ff;border-left:3px solid #7c3aed;color:#453d6b;',
+        img: 'max-width:100%;height:auto;display:block;margin:30px auto;border-radius:8px;',
+        a: 'color:#0e7490;text-decoration:none;border-bottom:1px solid #67e8f9;font-weight:600;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f3e8ff;color:#6d28d9;padding:2px 7px;border-radius:4px;font-size:0.88em;',
+        pre: 'padding:22px;border-radius:8px;margin:26px 0;background:#1e1b2e;color:#c4b5fd;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:20px 0;padding-left:1.8em;',
+        ol: 'margin:20px 0;padding-left:1.8em;',
+        li: 'margin:10px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:28px 0;font-size:14px;',
+        th: 'color:#4c1d95;font-weight:700;padding:12px 16px;text-align:left;border-bottom:2px solid #7c3aed;',
+        td: 'padding:12px 16px;border-bottom:1px solid #eae6f7;',
+        hr: 'border:none;border-top:2px solid #e0dbf2;margin:44px 0;'
+    },
+
+    // 书摘 · 阅读笔记（签名：衬线缩进正文 + 斜体大引文，纸书感）
+    shuzhai: {
+        container: 'font-family:Georgia,"Noto Serif SC","Songti SC","STSong",serif;font-size:16px;line-height:2;color:#33312e;',
+        h1: 'font-size:25px;font-weight:700;color:#2a2724;margin:48px 0 24px;letter-spacing:2px;line-height:1.5;',
+        h2: 'font-size:19px;font-weight:700;color:#2a2724;margin:40px 0 18px;padding-bottom:10px;border-bottom:1px solid #c4b9aa;letter-spacing:1px;',
+        h3: 'font-size:16.5px;font-weight:700;color:#6b6157;margin:28px 0 12px;',
+        p: 'margin:20px 0;text-align:justify;text-justify:inter-ideograph;text-indent:2em;',
+        strong: 'font-weight:700;color:#8a5a2b;',
+        em: 'font-style:italic;color:#8a8178;',
+        blockquote: 'margin:36px 0;padding:26px 30px;background:#faf7f2;border-left:3px solid #c4b9aa;color:#4a453f;font-size:16.5px;line-height:2.05;font-style:italic;',
+        img: 'max-width:100%;height:auto;display:block;margin:34px auto;border:1px solid #e3dcd2;padding:6px;background:#fff;',
+        a: 'color:#8a5a2b;text-decoration:none;border-bottom:1px solid #d3bfa3;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f5f0e8;color:#6b4a2b;padding:2px 7px;font-size:0.88em;',
+        pre: 'padding:22px;margin:26px 0;background:#faf7f2;border:1px solid #e3dcd2;color:#33312e;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.8;',
+        ul: 'margin:20px 0;padding-left:2em;',
+        ol: 'margin:20px 0;padding-left:2em;',
+        li: 'margin:11px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:30px 0;font-size:14px;',
+        th: 'color:#4a453f;font-weight:700;padding:13px 16px;text-align:left;border-bottom:2px solid #c4b9aa;',
+        td: 'padding:12px 16px;border-bottom:1px solid #eae4da;',
+        hr: 'border:none;border-top:1px solid #d8d0c4;margin:52px 35%;'
+    },
+
+    // 数据 · 研究报告（签名：藏青色块大标题 + 红强调数据，研报纪律感）
+    baogao: {
+        container: 'font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif;font-size:15.5px;line-height:1.8;color:#262626;',
+        h1: 'font-size:24px;font-weight:700;color:#fff;background:#123a63;margin:44px 0 24px;padding:16px 20px;line-height:1.45;',
+        h2: 'font-size:20px;font-weight:700;color:#123a63;margin:38px 0 16px;padding-bottom:8px;border-bottom:2px solid #123a63;',
+        h3: 'font-size:16px;font-weight:600;color:#34558a;margin:26px 0 12px;',
+        p: 'margin:16px 0;text-align:justify;text-justify:inter-ideograph;',
+        strong: 'font-weight:700;color:#c0392b;',
+        em: 'font-style:italic;color:#8c8c8c;',
+        blockquote: 'margin:26px 0;padding:18px 22px;background:#f7f9fb;border:1px solid #d9e2ec;border-left:4px solid #123a63;color:#33475b;',
+        img: 'max-width:100%;height:auto;display:block;margin:28px auto;border:1px solid #e1e8ed;',
+        a: 'color:#096dd9;text-decoration:none;border-bottom:1px solid #91caff;',
+        code: 'font-family:SF Mono,Monaco,monospace;background:#f0f4f8;color:#c0392b;padding:2px 7px;font-size:0.88em;',
+        pre: 'padding:20px;margin:24px 0;background:#f7f9fb;border:1px solid #d9e2ec;color:#262626;overflow-x:auto;white-space:pre-wrap;word-break:break-word;font-family:SF Mono,Monaco,monospace;font-size:13px;line-height:1.7;',
+        ul: 'margin:18px 0;padding-left:1.8em;',
+        ol: 'margin:18px 0;padding-left:1.8em;',
+        li: 'margin:9px 0;',
+        table: 'width:100%;border-collapse:collapse;margin:28px 0;font-size:14px;',
+        th: 'color:#ffffff;background:#123a63;font-weight:600;padding:12px 16px;text-align:left;',
+        td: 'padding:11px 16px;border-bottom:1px solid #e1e8ed;',
+        hr: 'border:none;border-top:2px solid #d9e2ec;margin:40px 0;'
+    }
+};
+
+// 应用主题样式到元素
+function applyWechatStyles(element, themeName) {
+    const theme = WECHAT_THEMES[themeName] || WECHAT_THEMES.chenlu;
+
+    function applyStyles(el) {
+        if (el.nodeType !== 1) return;
+
+        const tagName = el.tagName.toLowerCase();
+
+        if (theme[tagName]) {
+            const existingStyle = el.getAttribute('style') || '';
+            el.setAttribute('style', theme[tagName] + existingStyle);
+        }
+
+        if (tagName === 'img') {
+            const src = el.getAttribute('src') || '';
+            const alt = el.getAttribute('alt') || '';
+            el.setAttribute('style', theme.img);
+            el.setAttribute('src', src);
+            el.setAttribute('alt', alt);
+        }
+
+        Array.from(el.children).forEach(applyStyles);
+    }
+
+    element.setAttribute('style', theme.container);
+    Array.from(element.children).forEach(applyStyles);
+}
+
+// ============================================================
+// 应用核心逻辑
+// ============================================================
+const state = { currentTheme: 'chenlu', inputMode: 'markdown' };
+let elements = {};
+
+const CONSTANTS = {
+    MAX_FILE_SIZE: 10 * 1024 * 1024,
+    MAX_PASTE_SIZE: 5 * 1024 * 1024,
+    DEBOUNCE_DELAY: 300
+};
+
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+function replaceTaskListCheckboxes(container) {
+    if (!container || typeof container.querySelectorAll !== 'function') return;
+    const inputs = container.querySelectorAll('input[type="checkbox"]');
+    inputs.forEach(input => {
+        const checked = input.checked || input.getAttribute('checked') !== null;
+        const textNode = document.createTextNode(checked ? '☑ ' : '☐ ');
+        if (input.parentNode) input.parentNode.replaceChild(textNode, input);
+    });
+}
+
+function removeAllSvg(container) {
+    if (!container || typeof container.querySelectorAll !== 'function') return;
+    container.querySelectorAll('svg').forEach(svg => svg.remove());
+}
+
+function isProbablyHtml(input) {
+    if (!input || typeof input !== 'string') return false;
+    return /<\/?[a-z][\s\S]*>/i.test(input);
+}
+
+function sanitizeHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    if (typeof DOMPurify !== 'undefined' && DOMPurify && typeof DOMPurify.sanitize === 'function') {
+        return DOMPurify.sanitize(html, {
+            ALLOWED_TAGS: [
+                'h1','h2','h3','h4','h5','h6',
+                'p','div','br','hr',
+                'strong','b','em','i','u','s','del',
+                'a',
+                'blockquote',
+                'ul','ol','li',
+                'code','pre',
+                'img',
+                'table','thead','tbody','tr','th','td'
+            ],
+            ALLOWED_ATTR: ['href','src','alt','title','target','rel','rowspan','colspan'],
+            ALLOW_DATA_ATTR: false,
+            KEEP_CONTENT: true
+        });
+    }
+    return html;
+}
+
+function normalizeFeishuHtml(html) {
+    if (!html || typeof html !== 'string') return '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const body = doc.body;
+
+    function isEmptyBlock(el) {
+        if (!el || el.nodeType !== 1) return false;
+        const tag = el.tagName.toLowerCase();
+        if (tag !== 'p' && tag !== 'div') return false;
+
+        if (el.querySelector && el.querySelector('img,table,ul,ol,pre,blockquote,h1,h2,h3,h4,h5,h6')) return false;
+
+        const text = (el.textContent || '').replace(/\u00a0/g, ' ').trim();
+        if (text) return false;
+
+        const onlyBrOrWhitespace = Array.from(el.childNodes).every(n => {
+            if (n.nodeType === 3) return !n.textContent || !n.textContent.trim();
+            if (n.nodeType === 1) return n.tagName && n.tagName.toLowerCase() === 'br';
+            return true;
+        });
+        return onlyBrOrWhitespace;
+    }
+
+    body.querySelectorAll('svg').forEach(n => n.remove());
+
+    body.querySelectorAll('span').forEach(span => {
+        const frag = doc.createDocumentFragment();
+        while (span.firstChild) frag.appendChild(span.firstChild);
+        span.replaceWith(frag);
+    });
+
+    Array.from(body.children).forEach(child => {
+        if (child.tagName && child.tagName.toLowerCase() === 'div') {
+            const p = doc.createElement('p');
+            p.innerHTML = child.innerHTML;
+            child.replaceWith(p);
+        }
+    });
+
+    while (body.firstChild) {
+        const n = body.firstChild;
+        if (n.nodeType === 3 && (!n.textContent || !n.textContent.trim())) {
+            n.remove();
+            continue;
+        }
+        if (n.nodeType === 1) {
+            const tag = n.tagName.toLowerCase();
+            if (tag === 'br') {
+                n.remove();
+                continue;
+            }
+            if (isEmptyBlock(n)) {
+                n.remove();
+                continue;
+            }
+        }
+        break;
+    }
+
+    return body.innerHTML;
+}
+
+function stripLeadingBlankBlocks(container) {
+    if (!container || typeof container.firstChild === 'undefined') return;
+    while (container.firstChild) {
+        const n = container.firstChild;
+        if (n.nodeType === 3 && (!n.textContent || !n.textContent.trim())) {
+            n.remove();
+            continue;
+        }
+        if (n.nodeType === 1) {
+            const tag = n.tagName.toLowerCase();
+            if (tag === 'br') {
+                n.remove();
+                continue;
+            }
+            if ((tag === 'p' || tag === 'div') && (!n.textContent || !n.textContent.replace(/\u00a0/g, ' ').trim()) && !n.querySelector('img,table,ul,ol,pre,blockquote,h1,h2,h3,h4,h5,h6')) {
+                n.remove();
+                continue;
+            }
+        }
+        break;
+    }
+}
+
+function setInputMode(mode) {
+    const next = mode === 'feishu' ? 'feishu' : 'markdown';
+    state.inputMode = next;
+
+    const isFeishu = next === 'feishu';
+    if (elements.editor) elements.editor.hidden = isFeishu;
+    if (elements.feishuEditor) elements.feishuEditor.hidden = !isFeishu;
+
+    if (elements.modeButtons && elements.modeButtons.length) {
+        elements.modeButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-mode') === next);
+        });
+    }
+
+    updatePreview();
+}
+
+function getSourceFromInput() {
+    if (state.inputMode === 'feishu') {
+        return (elements.feishuEditor && elements.feishuEditor.innerHTML) ? elements.feishuEditor.innerHTML : '';
+    }
+    return elements.editor ? elements.editor.value : '';
+}
+
+function getHtmlForPreviewAndCopy() {
+    const source = getSourceFromInput().trim();
+    if (!source) return '';
+
+    if (state.inputMode === 'feishu') {
+        return sanitizeHtml(normalizeFeishuHtml(source));
+    }
+
+    if (source.startsWith('<') || isProbablyHtml(source)) {
+        return sanitizeHtml(source);
+    }
+
+    return sanitizeHtml(marked.parse(source));
+}
+
+function setFileInfo(text) {
+    if (!elements.fileInfo) return;
+    elements.fileInfo.textContent = text || '未选择文件';
+}
+
+function readFileAsText(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
+        reader.readAsText(file);
+    });
+}
+
+function readFileAsArrayBuffer(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+async function handleUploadedFile(file) {
+    if (!file) return;
+
+    if (file.size > CONSTANTS.MAX_FILE_SIZE) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+        showToast(`❌ 文件过大 (${sizeMB}MB)，请上传小于 ${CONSTANTS.MAX_FILE_SIZE / (1024 * 1024)}MB 的文件`);
+        return;
+    }
+
+    const name = file.name || '';
+    const ext = (name.split('.').pop() || '').toLowerCase();
+    setFileInfo(name);
+
+    try {
+        if (ext === 'md' || ext === 'markdown' || ext === 'txt') {
+            const text = await readFileAsText(file);
+            setInputMode('markdown');
+            if (elements.editor) elements.editor.value = text;
+            updatePreview();
+            showToast('✅ 文件已导入（Markdown）');
+            return;
+        }
+
+        if (ext === 'docx') {
+            if (typeof mammoth === 'undefined' || !mammoth || typeof mammoth.convertToHtml !== 'function') {
+                showToast('❌ Word 解析库未加载（mammoth）');
+                return;
+            }
+            const arrayBuffer = await readFileAsArrayBuffer(file);
+            const result = await mammoth.convertToHtml({ arrayBuffer });
+            const html = result && result.value ? result.value : '';
+            setInputMode('feishu');
+            if (elements.feishuEditor) {
+                elements.feishuEditor.innerHTML = sanitizeHtml(normalizeFeishuHtml(html));
+            }
+            updatePreview();
+            showToast('✅ Word 已导入');
+            return;
+        }
+
+        showToast('⚠️ 不支持的文件类型');
+    } catch (err) {
+        console.error('文件导入失败:', err);
+        showToast('❌ 导入失败：' + (err && err.message ? err.message : '未知错误'));
+    }
+}
+
+function parseInlineStyle(styleStr) {
+    const map = {};
+    if (!styleStr || typeof styleStr !== 'string') return map;
+
+    styleStr
+        .split(';')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .forEach(decl => {
+            const idx = decl.indexOf(':');
+            if (idx <= 0) return;
+            const prop = decl.slice(0, idx).trim().toLowerCase();
+            const value = decl.slice(idx + 1).trim();
+            if (!prop) return;
+            map[prop] = value;
+        });
+
+    return map;
+}
+
+function pickBgColorForWechat(backgroundValue) {
+    if (!backgroundValue || typeof backgroundValue !== 'string') return null;
+
+    const hex = backgroundValue.match(/#(?:[0-9a-fA-F]{3,8})/);
+    if (hex) return hex[0];
+
+    const rgb = backgroundValue.match(/rgba?\([^)]+\)/i);
+    if (rgb) return rgb[0];
+
+    return null;
+}
+
+function buildWechatBackgroundWrapper(containerStyle) {
+    const styleMap = parseInlineStyle(containerStyle);
+    const backgroundValue = styleMap['background-color'] || styleMap['background'] || '';
+    const bgColor = pickBgColorForWechat(backgroundValue);
+
+    delete styleMap['background-color'];
+    delete styleMap['background'];
+
+    const styleWithoutBg = Object.entries(styleMap)
+        .map(([k, v]) => `${k}:${v}`)
+        .join(';');
+
+    if (!bgColor) {
+        return {
+            open: '<div style="' + (containerStyle || '') + '">',
+            close: '</div>'
+        };
+    }
+
+    const safeBg = escapeHtml(bgColor);
+    const tdStyle = (styleWithoutBg ? styleWithoutBg + ';' : '') + `background-color:${bgColor};`;
+
+    return {
+        open:
+            `<table border="0" cellpadding="0" cellspacing="0" width="100%" bgcolor="${safeBg}" ` +
+            `style="width:100%;border-collapse:collapse;background-color:${bgColor};">` +
+            `<tbody><tr><td style="${tdStyle}">`,
+        close: '</td></tr></tbody></table>'
+    };
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof marked === 'undefined') {
+        console.error('❌ marked.js 未加载！');
+        showToast('❌ 加载失败：请刷新页面重试（网络问题）');
+        return;
+    }
+
+    if (typeof WECHAT_THEMES === 'undefined') {
+        console.error('❌ themes.js 未加载！');
+        showToast('❌ 加载失败：请刷新页面重试（主题文件缺失）');
+        return;
+    }
+
+    if (typeof DOMPurify === 'undefined') {
+        console.warn('⚠️ DOMPurify 未加载，XSS 防护功能受限');
+        showToast('⚠️ 安全组件加载失败，建议刷新页面');
+    }
+
+    if (typeof mammoth === 'undefined') {
+        console.warn('⚠️ mammoth.js 未加载，Word 导入功能不可用');
+    }
+
+    if (typeof hljs !== 'undefined' && hljs) {
+        hljs.highlightAll();
+        console.log('✅ 代码高亮初始化完成');
+    } else {
+        console.warn('⚠️ highlight.js 未加载，代码块无高亮');
+    }
+
+    elements = {
+        editor: document.getElementById('editor'),
+        feishuEditor: document.getElementById('feishu-editor'),
+        preview: document.getElementById('preview-content'),
+        themeSelect: document.getElementById('theme-select'),
+        fileUpload: document.getElementById('file-upload'),
+        fileInfo: document.getElementById('file-info'),
+        copyBtn: document.getElementById('copy-btn'),
+        resetBtn: document.getElementById('reset-btn'),
+        toast: document.getElementById('toast'),
+        modeButtons: Array.from(document.querySelectorAll('.mode-btn'))
+    };
+
+    if (!elements.editor) {
+        console.error('❌ 找不到编辑器元素');
+        return;
+    }
+
+    setFileInfo('未选择文件');
+
+    try {
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            sanitize: false
+        });
+        console.log('✅ marked 配置完成');
+    } catch (e) {
+        console.error('❌ marked 配置失败:', e);
+    }
+
+    if (elements.modeButtons && elements.modeButtons.length) {
+        elements.modeButtons.forEach(btn => {
+            btn.addEventListener('click', () => setInputMode(btn.getAttribute('data-mode')));
+        });
+    }
+
+    const debouncedUpdate = debounce(updatePreview, CONSTANTS.DEBOUNCE_DELAY);
+
+    elements.editor.addEventListener('input', function() {
+        debouncedUpdate();
+    });
+
+    if (elements.feishuEditor) {
+        elements.feishuEditor.addEventListener('input', function() {
+            debouncedUpdate();
+        });
+    }
+
+    if (elements.fileUpload) {
+        elements.fileUpload.addEventListener('change', async function(e) {
+            const file = e.target && e.target.files ? e.target.files[0] : null;
+            if (!file) return;
+            await handleUploadedFile(file);
+        });
+    }
+
+    elements.editor.addEventListener('paste', function(e) {
+        try {
+            const html = e.clipboardData && e.clipboardData.getData ? e.clipboardData.getData('text/html') : '';
+
+            if (html && html.length > CONSTANTS.MAX_PASTE_SIZE) {
+                const sizeMB = (html.length / (1024 * 1024)).toFixed(1);
+                showToast(`⚠️ 内容过大 (${sizeMB}MB)，请分段粘贴`);
+                e.preventDefault();
+                return;
+            }
+
+            if (html && isProbablyHtml(html)) {
+                e.preventDefault();
+                setInputMode('feishu');
+                const cleaned = sanitizeHtml(normalizeFeishuHtml(html));
+                if (elements.feishuEditor) elements.feishuEditor.innerHTML = cleaned;
+                showToast('✅ 已识别飞书富文本，已切换到"飞书文档"模式');
+            }
+        } catch (_) {}
+    });
+
+    if (elements.feishuEditor) {
+        elements.feishuEditor.addEventListener('paste', function(e) {
+            try {
+                const html = e.clipboardData && e.clipboardData.getData ? e.clipboardData.getData('text/html') : '';
+
+                if (html && html.length > CONSTANTS.MAX_PASTE_SIZE) {
+                    const sizeMB = (html.length / (1024 * 1024)).toFixed(1);
+                    showToast(`⚠️ 内容过大 (${sizeMB}MB)，请分段粘贴`);
+                    e.preventDefault();
+                    return;
+                }
+
+                if (html && isProbablyHtml(html)) {
+                    e.preventDefault();
+                    const cleaned = sanitizeHtml(normalizeFeishuHtml(html));
+                    elements.feishuEditor.innerHTML = cleaned;
+                    updatePreview();
+                }
+            } catch (_) {}
+        });
+    }
+
+    elements.themeSelect.addEventListener('change', function(e) {
+        state.currentTheme = e.target.value;
+        updatePreview();
+    });
+
+    elements.resetBtn.addEventListener('click', function() {
+        elements.editor.value = '';
+        if (elements.feishuEditor) elements.feishuEditor.innerHTML = '';
+        if (elements.fileUpload) elements.fileUpload.value = '';
+        setFileInfo('未选择文件');
+        updatePreview();
+        showToast('🗑️ 已清空');
+    });
+
+    elements.copyBtn.addEventListener('click', function() {
+        copyToWechat();
+    });
+
+    setTimeout(updatePreview, 100);
+});
+
+function updatePreview() {
+    const source = getSourceFromInput();
+    const content = source.trim();
+
+    if (!content) {
+        elements.preview.innerHTML = '<div class="placeholder">✨ 在左侧粘贴内容或上传文件<br>精美的排版预览将在这里呈现</div>';
+        elements.preview.className = 'wechat-content';
+        return;
+    }
+
+    try {
+        const html = getHtmlForPreviewAndCopy();
+
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        stripLeadingBlankBlocks(temp);
+        replaceTaskListCheckboxes(temp);
+
+        let rendered = temp.innerHTML;
+
+        removeAllSvg(temp);
+        rendered = temp.innerHTML;
+
+        elements.preview.innerHTML = '<div class="content-inner">' + rendered + '</div>';
+        elements.preview.className = 'wechat-content';
+
+        const inner = elements.preview.querySelector('.content-inner');
+        if (inner && typeof applyWechatStyles === 'function') {
+            applyWechatStyles(inner, state.currentTheme);
+        }
+
+        if (typeof hljs !== 'undefined' && hljs) {
+            inner.querySelectorAll('pre').forEach((pre) => {
+                const code = pre.querySelector('code');
+                const codeContent = code ? (code.textContent || code.innerText || '') : (pre.textContent || pre.innerText || '');
+
+                const wrapper = document.createElement('section');
+                wrapper.style.cssText = 'padding: 15px; border: 1px solid rgb(209, 209, 209); border-radius: 4px; margin: 16px 0px; background: rgb(248, 248, 248);';
+
+                const newPre = document.createElement('pre');
+                newPre.style.cssText = 'white-space: pre-wrap; word-break: break-word; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 14px; line-height: 1.6; margin: 0px; padding: 0px; overflow-x: auto; color: rgb(51, 51, 51);';
+                newPre.textContent = codeContent;
+
+                wrapper.appendChild(newPre);
+                pre.replaceWith(wrapper);
+            });
+
+            inner.querySelectorAll('code').forEach((codeEl) => {
+                if (codeEl.closest('pre')) return;
+
+                codeEl.style.cssText = 'padding: 2px 6px; background-color: rgb(248, 248, 248); border: 1px solid rgb(209, 209, 209); border-radius: 4px; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; color: rgb(233, 30, 99);';
+            });
+        }
+
+    } catch (error) {
+        console.error('updatePreview 错误:', error);
+        elements.preview.innerHTML = '<div class="placeholder" style="color:red;">❌ 解析失败: ' + error.message + '</div>';
+    }
+}
+
+async function copyToWechat() {
+    const content = getSourceFromInput().trim();
+    if (!content) {
+        showToast('⚠️ 没有内容');
+        return;
+    }
+
+    let themeName = state.currentTheme;
+    let theme = WECHAT_THEMES[themeName];
+
+    if (!theme) {
+        themeName = 'chenlu';
+        state.currentTheme = themeName;
+        if (elements.themeSelect) elements.themeSelect.value = themeName;
+        theme = WECHAT_THEMES[themeName];
+    }
+
+    try {
+        let html = getHtmlForPreviewAndCopy();
+
+        const wrapper = buildWechatBackgroundWrapper(theme.container || '');
+        let styled = wrapper.open;
+
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+        stripLeadingBlankBlocks(temp);
+        replaceTaskListCheckboxes(temp);
+        removeAllSvg(temp);
+
+        Array.from(temp.childNodes).forEach(function(node) {
+            if (node.nodeType === 3) {
+                if (node.textContent.trim()) {
+                    styled += '<p style="' + (theme.p || '') + '">' + escapeHtml(node.textContent) + '</p>';
+                }
+            } else if (node.nodeType === 1) {
+                styled += processElement(node, theme, themeName);
+            }
+        });
+
+        styled += wrapper.close;
+
+        if (navigator.clipboard && navigator.clipboard.write) {
+            await navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': new Blob([styled], { type: 'text/html' })
+                })
+            ]);
+            console.log('✅ 复制成功');
+            showToast('✅ 已复制到剪贴板');
+        } else {
+            console.log('使用降级复制方案');
+            fallbackCopy(styled);
+        }
+    } catch (error) {
+        console.error('复制失败:', error);
+        showToast('❌ 复制失败: ' + error.message);
+    }
+}
+
+function processElementChildren(el, theme, themeName) {
+    let result = '';
+    Array.from(el.childNodes).forEach(function(child) {
+        if (child.nodeType === 3) {
+            result += escapeHtml(child.textContent);
+        } else if (child.nodeType === 1) {
+            result += processElement(child, theme, themeName);
+        }
+    });
+    return result;
+}
+
+function processElement(el, theme, themeName) {
+    const tag = el.tagName.toLowerCase();
+
+    if (tag === 'br') {
+        return '<br>';
+    }
+    if (tag === 'hr') {
+        const baseStyle = theme.hr || '';
+        const existingStyle = el.getAttribute('style') || '';
+        const style = (baseStyle || '') + (existingStyle || '');
+        return '<hr' + (style ? ' style="' + style + '"' : '') + '>';
+    }
+
+    if (tag === 'img') {
+        const src = escapeHtml(el.getAttribute('src') || '');
+        const alt = escapeHtml(el.getAttribute('alt') || '');
+        return '<img src="' + src + '" alt="' + alt + '" style="' + (theme.img || 'max-width:100%;height:auto;display:block;margin:20px auto;') + '">';
+    }
+
+    if (tag === 'pre') {
+        let codeContent = '';
+        const codeEl = el.querySelector('code');
+        if (codeEl) {
+            codeContent = codeEl.textContent || codeEl.innerText || '';
+        } else {
+            codeContent = el.textContent || el.innerText || '';
+        }
+
+        const codeBlock = `
+<section style="padding: 15px; border: 1px solid rgb(209, 209, 209); border-radius: 4px; margin: 16px 0px; background: rgb(248, 248, 248);">
+  <pre style="white-space: pre-wrap; word-break: break-word; font-family: SFMono-Regular, Consolas, &quot;Liberation Mono&quot;, Menlo, monospace; font-size: 14px; line-height: 1.6; margin: 0px; padding: 0px; overflow-x: auto; color: rgb(51, 51, 51);">${escapeHtml(codeContent)}</pre>
+</section>`;
+
+        return codeBlock;
+    }
+
+    const baseStyle = theme[tag] || '';
+    const existingStyle = el.getAttribute('style') || '';
+    const style = (baseStyle || '') + (existingStyle || '');
+
+    if (tag === 'code' && el.parentElement.tagName.toLowerCase() !== 'pre') {
+        const codeStyle = 'padding: 2px 6px; background-color: rgb(248, 248, 248); border: 1px solid rgb(209, 209, 209); border-radius: 4px; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; color: rgb(233, 30, 99);';
+        return '<code style="' + codeStyle + '">' + escapeHtml(el.textContent || el.innerText || '') + '</code>';
+    }
+
+    const ATTR_ALLOW = {
+        a: ['href', 'title', 'target', 'rel'],
+        th: ['colspan', 'rowspan'],
+        td: ['colspan', 'rowspan'],
+        table: ['cellpadding', 'cellspacing', 'border'],
+        code: ['class'],
+        pre: ['class']
+    };
+
+    function serializeAllowedAttrs(node) {
+        const allow = ATTR_ALLOW[tag] || [];
+        if (allow.length === 0) return '';
+        let attrs = '';
+        allow.forEach(name => {
+            if (!node.hasAttribute || !node.hasAttribute(name)) return;
+            const val = node.getAttribute(name);
+            if (val == null || val === '') return;
+            attrs += ' ' + name + '="' + escapeHtml(String(val)) + '"';
+        });
+        return attrs;
+    }
+
+    const attrs = serializeAllowedAttrs(el);
+    let result = '<' + tag + attrs + (style ? ' style="' + style + '"' : '') + '>';
+
+    result += processElementChildren(el, theme, themeName);
+
+    result += '</' + tag + '>';
+    return result;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function fallbackCopy(html) {
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    temp.style.cssText = 'position:fixed;left:-9999px;';
+    document.body.appendChild(temp);
+
+    const range = document.createRange();
+    range.selectNodeContents(temp);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    try {
+        document.execCommand('copy');
+        console.log('✅ 降级复制成功');
+        showToast('✅ 已复制');
+    } catch (e) {
+        console.error('降级复制也失败:', e);
+        showToast('❌ 复制失败，请手动复制');
+    }
+
+    sel.removeAllRanges();
+    document.body.removeChild(temp);
+}
+
+function showToast(msg) {
+    if (!elements.toast) return;
+    elements.toast.textContent = msg;
+    elements.toast.classList.add('show');
+    setTimeout(function() {
+        elements.toast.classList.remove('show');
+    }, 3000);
+}
+
+// 键盘快捷键支持
+document.addEventListener('keydown', function(e) {
+    if (!elements.editor) return;
+
+    if (document.activeElement === elements.editor) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+            e.preventDefault();
+            copyToWechat();
+        }
+
+        if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+            e.preventDefault();
+            showToast('💡 使用 Command+Enter 复制到微信');
+        }
+
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            elements.editor.value = '';
+            updatePreview();
+            showToast('🗑️ 已清空');
+        }
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'C') {
+        e.preventDefault();
+        copyToWechat();
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key >= '1' && e.key <= '5') {
+        e.preventDefault();
+        const themeMap = ['chenlu', 'dushi', 'senxi', 'guochao', 'wabi'];
+        const index = parseInt(e.key) - 1;
+        if (themeMap[index]) {
+            state.currentTheme = themeMap[index];
+            elements.themeSelect.value = themeMap[index];
+            updatePreview();
+            showToast('🎨 已切换主题: ' + themeMap[index]);
+        }
+    }
+});
+    </script>
+</body>
+</html>
