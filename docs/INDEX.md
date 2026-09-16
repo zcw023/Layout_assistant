@@ -20,8 +20,6 @@
 | 文档 | 说明 | 适用对象 |
 |------|------|---------|
 | [开发者指南](DEVELOPER_GUIDE.md) | 技术架构和 API | 开发者 |
-| [功能对比报告](FUNCTIONAL_COMPARISON.md) | 新旧功能对比 | 技术团队 |
-| [重构进度报告](REFACTORING_PROGRESS.md) | 项目重构进展 | 维护者 |
 
 ---
 
@@ -44,9 +42,6 @@
 **参与开发**
 → [开发者指南 - 贡献指南](DEVELOPER_GUIDE.md#贡献指南)
 
-**查看新功能**
-→ [重构进度报告](REFACTORING_PROGRESS.md)
-
 ---
 
 ## 📋 文档目录
@@ -56,9 +51,7 @@ docs/
 ├── INDEX.md                    # 📚 文档中心（本文件）
 ├── QUICK_START.md              # ⚡ 快速上手
 ├── PRODUCT_DOCUMENTATION.md    # 📖 产品文档
-├── DEVELOPER_GUIDE.md          # 🔧 开发者指南
-├── FUNCTIONAL_COMPARISON.md    # 📊 功能对比
-└── REFACTORING_PROGRESS.md     # 🚧 重构进度
+└── DEVELOPER_GUIDE.md          # 🔧 开发者指南
 ```
 
 ---
@@ -73,7 +66,6 @@ docs/
 | 选择主题 | [产品文档 - 主题对比](PRODUCT_DOCUMENTATION.md#主题对比表) |
 | 复制功能 | [产品文档 - 一键复制](PRODUCT_DOCUMENTATION.md#3-一键复制到微信) |
 | 遇到问题 | [产品文档 - FAQ](PRODUCT_DOCUMENTATION.md#常见问题-faq) |
-| 了解更新 | [重构进度](REFACTORING_PROGRESS.md) |
 
 ---
 
@@ -111,8 +103,6 @@ docs/
 | 快速上手指南 | v1.0 | 2026-01-31 |
 | 产品文档 | v1.0 | 2026-01-31 |
 | 开发者指南 | v1.0 | 2026-01-31 |
-| 功能对比报告 | v1.0 | 2026-01-31 |
-| 重构进度报告 | v1.0 | 2026-01-31 |
 
 ---
 

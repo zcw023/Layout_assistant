@@ -9,19 +9,16 @@ Layout_assistant/
 ├── index.html              # 主入口页面
 ├── README.md               # 项目说明
 ├── css/
-│   └── style.css          # 主样式文件（42KB）
+│   └── style.css          # 主样式文件
 ├── js/
-│   ├── app.js             # 应用主逻辑（7KB）
-│   ├── themes.js          # 主题配置（34KB）
-│   └── app-backup.js      # 备份文件
-├── src/                   # 新架构（未集成）
-│   ├── config/           # 配置文件
-│   ├── modules/          # 功能模块
-│   ├── styles/           # 样式生成器
-│   └── utils/            # 工具函数
-├── tests/                 # 测试文件
-├── docs/                  # 文档
-└── vendor/               # 第三方库（可选）
+│   ├── app.js             # 应用主逻辑
+│   └── themes.js          # 主题配置
+├── src/                   # 扩展模块
+│   ├── config/            # 配置文件
+│   ├── modules/           # 功能模块
+│   ├── styles/            # 样式生成器
+│   └── utils/             # 工具函数
+└── docs/                  # 文档
 ```
 
 ---

@@ -15,14 +15,6 @@
 
 ---
 
-## 📚 文档导航
-
-- 📖 [完整产品文档](docs/PRODUCT_DOCUMENTATION.md) - 详细功能说明和使用指南
-- ⚡ [快速上手](docs/QUICK_START.md) - 5 分钟快速开始
-- 🔧 [开发者指南](docs/DEVELOPER_GUIDE.md) - 技术架构和 API 文档
-
----
-
 ## 🎨 设计主题（9 款）
 
 ### 经典主题（3 款）
@@ -83,8 +75,6 @@ open http://localhost:8888
 4. **一键复制** - 点击"📋 一键复制"或按 `Cmd+Enter`
 5. **粘贴发布** - 在公众号编辑器中粘贴，格式完美保留
 
-💡 **详细使用指南**：[快速上手文档](docs/QUICK_START.md)
-
 ---
 
 ## 🎯 设计亮点
@@ -130,13 +120,9 @@ Layout_assistant/
 ├── js/
 │   ├── app.js             # 核心应用逻辑
 │   └── themes.js          # 主题配置
-├── docs/                  # 文档目录
-│   ├── PRODUCT_DOCUMENTATION.md
-│   ├── QUICK_START.md
-│   ├── DEVELOPER_GUIDE.md
-│   └── ...
-├── tests/                 # 测试文件
-└── README.md              # 项目说明
+├── docs/                  # 文档（快速上手、产品说明、开发者指南）
+├── README.md              # 项目说明
+└── LICENSE                # 开源协议
 ```
 
 ---
@@ -206,7 +192,6 @@ open http://localhost:8888
 
 ## 📞 支持与反馈
 
-- 📖 [完整文档](docs/INDEX.md)
 - 🐛 [问题反馈](https://github.com/your-username/Layout_assistant/issues)
 - 💡 [功能建议](https://github.com/your-username/Layout_assistant/issues)
 
