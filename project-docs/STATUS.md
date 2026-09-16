@@ -7,7 +7,7 @@
 
 - **当前迭代**：无（iter-00 立项收编完成，尚未排迭代）
 - **当前阶段**：立项完成｜待用户确认宪法后进入首次需求整理
-- **一句话进度**：收编归位 + project-docs + 验证基建已落地，`bash scripts/verify.sh` 全绿；最近提交 = 立项收编 commit（见 git log）
+- **一句话进度**：收编归位 + project-docs + 验证基建已落地，`bash scripts/verify.sh` 全绿；最近 commit `096a9d0`（已推送 GitHub）
 - **最近封板**：无（首次迭代未开始）
 
 ## 待用户决定
