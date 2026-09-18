@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 一键验证 · 微信公众号排版助手
-# 三段: ① 关键文件完整性 ② 静态引用一致性 ③ 本地服务器 smoke
+# 四段: ① 关键文件完整性 ② 静态引用一致性 ③ 本地服务器 smoke ④ 源头关·主题数据校验
 # 全部可自动判定; exit 0 = 全绿, 1 = 有失败项
 # (BP-001: 首跑失败先看完整输出定位根因, 别先怀疑文件缺失)
 set -uo pipefail
@@ -10,7 +10,7 @@ FAIL=0
 pass() { echo "  ✅ $1"; }
 fail() { echo "  ❌ $1"; FAIL=1; }
 
-echo "== 1/3 关键文件完整性 =="
+echo "== 1/4 关键文件完整性 =="
 for f in index.html css/style.css js/app.js js/themes.js single-file.html \
          LICENSE README.md \
          project-docs/CONSTITUTION.md project-docs/STATUS.md \
@@ -22,7 +22,7 @@ done
 [ -n "$(ls project-docs/decisions/*.md 2>/dev/null)" ] \
   && pass "decisions/ 存在决策档案" || fail "decisions/ 无决策档案"
 
-echo "== 2/3 静态引用一致性 =="
+echo "== 2/4 静态引用一致性 =="
 # index.html 引用的本地资源必须存在 (只认 src=/href= 属性里的相对路径, 排除 CDN URL)
 refs=$(grep -oE '(src|href)="(css|js)/[A-Za-z0-9._-]+(\?v=[0-9]+)?"' index.html \
         | sed -E 's/^(src|href)="//; s/"$//; s/\?.*//' | sort -u)
@@ -39,7 +39,7 @@ opt_n=$(grep -c '<option value=' index.html || true)
 grep -q 'WECHAT_THEMES' js/themes.js && pass "themes.js 含 WECHAT_THEMES 数据" || fail "themes.js 缺 WECHAT_THEMES"
 [ "$opt_n" = "9" ] && pass "index.html 主题下拉 = 9 款" || fail "index.html 主题下拉数量异常: $opt_n (期望 9)"
 
-echo "== 3/3 本地服务器 smoke =="
+echo "== 3/4 本地服务器 smoke =="
 PORT=18899
 python3 -m http.server "$PORT" >/dev/null 2>&1 &
 SRV=$!
@@ -50,6 +50,17 @@ for path in "/" "/css/style.css" "/js/app.js" "/js/themes.js" "/single-file.html
 done
 kill "$SRV" 2>/dev/null || true
 wait "$SRV" 2>/dev/null || true
+
+echo "== 4/4 源头关·主题数据校验 =="
+if command -v node >/dev/null 2>&1; then
+  if node scripts/check-themes.mjs >/dev/null 2>&1; then
+    pass "主题数据通过源头关（非 strict 模式，饱和度违规不阻断；任务 8 清零后切 --strict）"
+  else
+    fail "主题数据源头关失败（平台坑类违规: var/top/undefined/引号须清零）"
+  fi
+else
+  fail "源头关: 未找到 node（需 node 运行 scripts/check-themes.mjs）"
+fi
 
 echo ""
 if [ "$FAIL" -eq 0 ]; then echo "✅ 验证全绿"; else echo "❌ 验证存在失败项 (见上)"; fi

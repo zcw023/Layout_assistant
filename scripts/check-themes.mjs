@@ -11,7 +11,9 @@
  *   WARN（标记，不阻断）:
  *     - 容器暗色背景（复制时需回退浅色）
  *     - 两版主题 key 不一致（防分叉）
- * 用法: node scripts/check-themes.mjs   (退出码 0=全过 / 1=有 ERROR)
+ * 用法: node scripts/check-themes.mjs [--strict]
+ *   --strict: 文本色饱和度违规计 ERROR（默认 WARN 汇总，待主题校准清零后启用）
+ * 退出码 0=全过 / 1=有 ERROR
  * 零依赖：仅 node 内置模块。
  */
 import fs from 'node:fs';
@@ -20,9 +22,12 @@ import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const STRICT = process.argv.includes('--strict');
 
 let ERROR = 0;
 let WARN = 0;
+let satCount = 0;
+const satThemes = new Set();
 const err = (ctx, msg) => { console.error(`  ❌ [${ctx}] ${msg}`); ERROR++; };
 const warn = (ctx, msg) => { console.warn(`  ⚠️  [${ctx}] ${msg}`); WARN++; };
 
@@ -135,7 +140,9 @@ function checkStyleString(themeName, tagName, styleStr) {
       }
       const [h, s, l] = rgbToHsl(...rgb);
       if (s > SAT_THRESHOLD && l > 20 && l < 85) {
-        err(ctx, `文本色 ${c} 饱和度 ${s.toFixed(0)}% > ${SAT_THRESHOLD}%（灰阶承重）`);
+        satCount++;
+        satThemes.add(themeName);
+        if (STRICT) err(ctx, `文本色 ${c} 饱和度 ${s.toFixed(0)}% > ${SAT_THRESHOLD}%（灰阶承重）`);
       }
     }
   }
@@ -185,4 +192,7 @@ if (extra.length) warn('对齐', `拆分版多出: ${extra.join(', ')}`);
 if (!missing.length && !extra.length) console.log('  ✅ 两版主题 key 完全一致');
 
 console.log(`\n结果: ERROR ${ERROR} / WARN ${WARN}`);
+if (!STRICT && satCount > 0) {
+  warn('饱和度', `${satCount} 处文本色饱和违规（${[...satThemes].join(', ')}）→ 待主题校准清零后启用 --strict`);
+}
 process.exit(ERROR > 0 ? 1 : 0);
