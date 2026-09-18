@@ -647,6 +647,9 @@ async function copyToWechat() {
         // 输入源 -> HTML（Markdown / 飞书富文本）
         let html = getHtmlForPreviewAndCopy();
 
+        // 外链转脚注收集器（iter-01 平台兜底）
+        const footnotes = [];
+
         // 构建带内联样式的 HTML
         // 关键：背景色在公众号里经常会被清洗，优先用 table/td bgcolor 包裹
         const wrapper = buildWechatBackgroundWrapper(theme.container || '');
@@ -668,9 +671,19 @@ async function copyToWechat() {
                     styled += '<p style="' + (theme.p || '') + '">' + escapeHtml(node.textContent) + '</p>';
                 }
             } else if (node.nodeType === 1) { // 元素节点
-                styled += processElement(node, theme, themeName);
+                styled += processElement(node, theme, themeName, footnotes);
             }
         });
+
+        // 文末脚注区（外链转脚注的落点，iter-01）
+        if (footnotes.length) {
+            styled += '<div style="margin:32px 0 0;padding:16px 0 0;border-top:1px solid #e5e5e5;font-size:13px;color:#999;line-height:1.8;">';
+            footnotes.forEach(function(f, i) {
+                styled += '<p style="margin:4px 0;">[' + (i + 1) + '] ' + escapeHtml(f.text) +
+                          '：<span style="word-break:break-all;color:#bbb;">' + escapeHtml(f.href) + '</span></p>';
+            });
+            styled += '</div>';
+        }
 
         styled += wrapper.close;
 
@@ -697,20 +710,20 @@ async function copyToWechat() {
 }
 
 // 辅助函数：处理元素的所有子节点
-function processElementChildren(el, theme, themeName) {
+function processElementChildren(el, theme, themeName, footnotes) {
     let result = '';
     Array.from(el.childNodes).forEach(function(child) {
         if (child.nodeType === 3) { // 文本节点
             result += escapeHtml(child.textContent);
         } else if (child.nodeType === 1) { // 元素节点
-            result += processElement(child, theme, themeName);
+            result += processElement(child, theme, themeName, footnotes);
         }
     });
     return result;
 }
 
 // 处理单个元素
-function processElement(el, theme, themeName) {
+function processElement(el, theme, themeName, footnotes) {
     const tag = el.tagName.toLowerCase();
 
     // void 元素
@@ -720,7 +733,7 @@ function processElement(el, theme, themeName) {
     if (tag === 'hr') {
         const baseStyle = theme.hr || '';
         const existingStyle = el.getAttribute('style') || '';
-        const style = (baseStyle || '') + (existingStyle || '');
+        const style = cleanStyleValue((baseStyle || '') + (existingStyle || ''));
         return '<hr' + (style ? ' style="' + style + '"' : '') + '>';
     }
 
@@ -752,10 +765,29 @@ function processElement(el, theme, themeName) {
         return codeBlock;
     }
 
+    // 特殊处理 a 链接（iter-01 平台兜底）
+    if (tag === 'a') {
+        const href = el.getAttribute('href') || '';
+        const inner = processElementChildren(el, theme, themeName, footnotes);
+        const aStyle = theme.a || 'color:#576b95;text-decoration:underline;';
+        // 页内锚点：微信不支持跳转，移除 href 只留视觉
+        if (href.startsWith('#')) {
+            return '<a style="' + aStyle + '">' + inner + '</a>';
+        }
+        // 外链（非公众号文章链接）：转脚注 [n] + 文末脚注列表
+        if (href && !/^https?:\/\/mp\.weixin\.qq\.com/i.test(href)) {
+            const n = (footnotes ? footnotes.length : 0) + 1;
+            if (footnotes) footnotes.push({ text: el.textContent || inner, href: href });
+            return '<span style="' + aStyle + '">' + inner + '</span><sup style="font-size:12px;color:#999;padding-left:3px;">[' + n + ']</sup>';
+        }
+        // 公众号文章链接：保留
+        return '<a href="' + escapeHtml(href) + '" style="' + aStyle + '">' + inner + '</a>';
+    }
+
     // 获取样式
     const baseStyle = theme[tag] || '';
     const existingStyle = el.getAttribute('style') || '';
-    const style = (baseStyle || '') + (existingStyle || '');
+    const style = cleanStyleValue((baseStyle || '') + (existingStyle || ''));
 
     // 特殊处理 code（行内代码）- 使用微信原生格式
     if (tag === 'code' && el.parentElement.tagName.toLowerCase() !== 'pre') {
@@ -791,7 +823,7 @@ function processElement(el, theme, themeName) {
     let result = '<' + tag + attrs + (style ? ' style="' + style + '"' : '') + '>';
 
     // 处理子节点
-    result += processElementChildren(el, theme, themeName);
+    result += processElementChildren(el, theme, themeName, footnotes);
 
     result += '</' + tag + '>';
     return result;
@@ -802,6 +834,17 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// 清理 style 值中的无效声明（iter-01 平台兜底）
+// 过滤 "prop: undefined;" 等 juice/微信解析器会报错的片段
+function cleanStyleValue(s) {
+    return (s || '')
+        .replace(/[^;]+:\s*undefined\s*;?/gi, '')
+        .replace(/;{2,}/g, ';')
+        .replace(/^\s*;/, '')
+        .replace(/;\s*$/, '')
+        .trim();
 }
 
 // 降级复制
