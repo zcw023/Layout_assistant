@@ -34,10 +34,10 @@ done
 grep -q '</html>' single-file.html && pass "single-file.html 结构完整" || fail "single-file.html 疑似截断 (无 </html>)"
 grep -q 'marked' single-file.html && grep -q 'mammoth' single-file.html \
   && pass "single-file.html 核心依赖声明完整" || fail "single-file.html 缺 marked/mammoth 依赖"
-# 主题 key: index.html 的 option 与 themes.js 数据保持 9 个
+# 主题 key: index.html 的 option 与 themes.js 数据保持一致（对齐后 18 款）
 opt_n=$(grep -c '<option value=' index.html || true)
 grep -q 'WECHAT_THEMES' js/themes.js && pass "themes.js 含 WECHAT_THEMES 数据" || fail "themes.js 缺 WECHAT_THEMES"
-[ "$opt_n" = "9" ] && pass "index.html 主题下拉 = 9 款" || fail "index.html 主题下拉数量异常: $opt_n (期望 9)"
+[ "$opt_n" = "18" ] && pass "index.html 主题下拉 = 18 款" || fail "index.html 主题下拉数量异常: $opt_n (期望 18)"
 
 echo "== 3/4 本地服务器 smoke =="
 PORT=18899
