@@ -641,6 +641,13 @@ async function copyToWechat() {
         theme = WECHAT_THEMES[themeName];
     }
 
+    // 暗色主题回退浅色（iter-01）：公众号读者端自带暗色模式，暗色输出会异常
+    if (getThemeBackgroundLuminance(theme.container || '') < 0.5) {
+        showToast('⚠️ 暗色主题在公众号端可能异常，已自动改用「晨露」浅色主题复制');
+        themeName = 'chenlu';
+        theme = WECHAT_THEMES.chenlu;
+    }
+
     console.log('开始复制到微信，主题:', themeName);
 
     try {
@@ -686,6 +693,14 @@ async function copyToWechat() {
         }
 
         styled += wrapper.close;
+
+        // 产物关校验（iter-01）：硬违规拦截复制，保证输出可靠性
+        const issues = assertWechatOutput(styled);
+        if (issues.length) {
+            console.error('复制被拦截，平台约束违规:', issues);
+            showToast('❌ 复制已拦截：' + issues[0] + (issues.length > 1 ? '（等 ' + issues.length + ' 项，详见控制台）' : ''));
+            return;
+        }
 
         console.log('生成 HTML 长度:', styled.length);
 
@@ -845,6 +860,47 @@ function cleanStyleValue(s) {
         .replace(/^\s*;/, '')
         .replace(/;\s*$/, '')
         .trim();
+}
+
+// 主题容器背景亮度检测（iter-01）：暗色主题在复制时回退浅色
+function getThemeBackgroundLuminance(containerStyle) {
+    const m = (containerStyle || '').match(/background(?:-color)?\s*:\s*([^;]+)/i);
+    if (!m) return 1; // 无背景视为浅色
+    const bg = m[1].trim();
+    let rgb = null;
+    if (bg.startsWith('#')) {
+        const hex = bg.slice(1);
+        if (hex.length === 3) rgb = [parseInt(hex[0] + hex[0], 16), parseInt(hex[1] + hex[1], 16), parseInt(hex[2] + hex[2], 16)];
+        else if (hex.length >= 6) rgb = [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+    } else if (bg.startsWith('rgb')) {
+        const mm = bg.match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+        if (mm) rgb = [parseInt(mm[1]), parseInt(mm[2]), parseInt(mm[3])];
+    }
+    if (!rgb) return 1;
+    return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+}
+
+// 产物关校验（iter-01）：复制前对最终 HTML 跑平台约束断言，返回违规清单
+function assertWechatOutput(styled) {
+    const issues = [];
+    // 外链残留（非公众号文章链接）
+    const linkRe = /<a\b[^>]*\bhref\s*=\s*["'](https?:\/\/[^"']+)/gi;
+    let m;
+    while ((m = linkRe.exec(styled)) !== null) {
+        if (!/^https?:\/\/mp\.weixin\.qq\.com/i.test(m[1])) {
+            issues.push('存在未转换的外链：' + m[1].slice(0, 40));
+            break;
+        }
+    }
+    // 页内锚点残留
+    if (/href\s*=\s*["']#/i.test(styled)) issues.push('存在页内锚点链接 (href="#")');
+    // CSS 变量残留
+    if (/var\(--/i.test(styled)) issues.push('存在 CSS 变量 (var(--)) 残留');
+    // top 定位残留
+    if (/(^|[^-])top\s*:/i.test(styled)) issues.push('存在 top: 定位（应转 transform）');
+    // undefined 值
+    if (/\bundefined\b/i.test(styled)) issues.push('存在 undefined 值');
+    return issues;
 }
 
 // 降级复制
