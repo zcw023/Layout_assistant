@@ -1812,8 +1812,18 @@ async function copyToWechat() {
         theme = WECHAT_THEMES[themeName];
     }
 
+    // 暗色主题回退浅色（iter-01 平台兜底）：公众号读者端自带暗色模式
+    if (getThemeBackgroundLuminance(theme.container || '') < 0.5) {
+        showToast('⚠️ 暗色主题在公众号端可能异常，已自动改用「晨露」浅色主题复制');
+        themeName = 'chenlu';
+        theme = WECHAT_THEMES.chenlu;
+    }
+
     try {
         let html = getHtmlForPreviewAndCopy();
+
+        // 外链转脚注收集器（iter-01 平台兜底）
+        const footnotes = [];
 
         const wrapper = buildWechatBackgroundWrapper(theme.container || '');
         let styled = wrapper.open;
@@ -1830,11 +1840,29 @@ async function copyToWechat() {
                     styled += '<p style="' + (theme.p || '') + '">' + escapeHtml(node.textContent) + '</p>';
                 }
             } else if (node.nodeType === 1) {
-                styled += processElement(node, theme, themeName);
+                styled += processElement(node, theme, themeName, footnotes);
             }
         });
 
+        // 文末脚注区（外链转脚注的落点，iter-01）
+        if (footnotes.length) {
+            styled += '<div style="margin:32px 0 0;padding:16px 0 0;border-top:1px solid #e5e5e5;font-size:13px;color:#999;line-height:1.8;">';
+            footnotes.forEach(function(f, i) {
+                styled += '<p style="margin:4px 0;">[' + (i + 1) + '] ' + escapeHtml(f.text) +
+                          '：<span style="word-break:break-all;color:#bbb;">' + escapeHtml(f.href) + '</span></p>';
+            });
+            styled += '</div>';
+        }
+
         styled += wrapper.close;
+
+        // 产物关校验（iter-01）：硬违规拦截复制
+        const issues = assertWechatOutput(styled);
+        if (issues.length) {
+            console.error('复制被拦截，平台约束违规:', issues);
+            showToast('❌ 复制已拦截：' + issues[0] + (issues.length > 1 ? '（等 ' + issues.length + ' 项，详见控制台）' : ''));
+            return;
+        }
 
         if (navigator.clipboard && navigator.clipboard.write) {
             await navigator.clipboard.write([
@@ -1854,19 +1882,19 @@ async function copyToWechat() {
     }
 }
 
-function processElementChildren(el, theme, themeName) {
+function processElementChildren(el, theme, themeName, footnotes) {
     let result = '';
     Array.from(el.childNodes).forEach(function(child) {
         if (child.nodeType === 3) {
             result += escapeHtml(child.textContent);
         } else if (child.nodeType === 1) {
-            result += processElement(child, theme, themeName);
+            result += processElement(child, theme, themeName, footnotes);
         }
     });
     return result;
 }
 
-function processElement(el, theme, themeName) {
+function processElement(el, theme, themeName, footnotes) {
     const tag = el.tagName.toLowerCase();
 
     if (tag === 'br') {
@@ -1875,7 +1903,7 @@ function processElement(el, theme, themeName) {
     if (tag === 'hr') {
         const baseStyle = theme.hr || '';
         const existingStyle = el.getAttribute('style') || '';
-        const style = (baseStyle || '') + (existingStyle || '');
+        const style = cleanStyleValue((baseStyle || '') + (existingStyle || ''));
         return '<hr' + (style ? ' style="' + style + '"' : '') + '>';
     }
 
@@ -1902,9 +1930,28 @@ function processElement(el, theme, themeName) {
         return codeBlock;
     }
 
+    // 特殊处理 a 链接（iter-01 平台兜底）
+    if (tag === 'a') {
+        const href = el.getAttribute('href') || '';
+        const inner = processElementChildren(el, theme, themeName, footnotes);
+        const aStyle = theme.a || 'color:#576b95;text-decoration:underline;';
+        // 页内锚点：微信不支持跳转，移除 href 只留视觉
+        if (href.startsWith('#')) {
+            return '<a style="' + aStyle + '">' + inner + '</a>';
+        }
+        // 外链（非公众号文章链接）：转脚注 [n] + 文末脚注列表
+        if (href && !/^https?:\/\/mp\.weixin\.qq\.com/i.test(href)) {
+            const n = (footnotes ? footnotes.length : 0) + 1;
+            if (footnotes) footnotes.push({ text: el.textContent || inner, href: href });
+            return '<span style="' + aStyle + '">' + inner + '</span><sup style="font-size:12px;color:#999;padding-left:3px;">[' + n + ']</sup>';
+        }
+        // 公众号文章链接：保留
+        return '<a href="' + escapeHtml(href) + '" style="' + aStyle + '">' + inner + '</a>';
+    }
+
     const baseStyle = theme[tag] || '';
     const existingStyle = el.getAttribute('style') || '';
-    const style = (baseStyle || '') + (existingStyle || '');
+    const style = cleanStyleValue((baseStyle || '') + (existingStyle || ''));
 
     if (tag === 'code' && el.parentElement.tagName.toLowerCase() !== 'pre') {
         const codeStyle = 'padding: 2px 6px; background-color: rgb(248, 248, 248); border: 1px solid rgb(209, 209, 209); border-radius: 4px; font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; font-size: 0.9em; color: rgb(233, 30, 99);';
@@ -1936,7 +1983,7 @@ function processElement(el, theme, themeName) {
     const attrs = serializeAllowedAttrs(el);
     let result = '<' + tag + attrs + (style ? ' style="' + style + '"' : '') + '>';
 
-    result += processElementChildren(el, theme, themeName);
+    result += processElementChildren(el, theme, themeName, footnotes);
 
     result += '</' + tag + '>';
     return result;
@@ -1946,6 +1993,52 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// 清理 style 值中的无效声明（iter-01 平台兜底）
+function cleanStyleValue(s) {
+    return (s || '')
+        .replace(/[^;]+:\s*undefined\s*;?/gi, '')
+        .replace(/;{2,}/g, ';')
+        .replace(/^\s*;/, '')
+        .replace(/;\s*$/, '')
+        .trim();
+}
+
+// 主题容器背景亮度检测（iter-01）：暗色主题在复制时回退浅色
+function getThemeBackgroundLuminance(containerStyle) {
+    const m = (containerStyle || '').match(/background(?:-color)?\s*:\s*([^;]+)/i);
+    if (!m) return 1;
+    const bg = m[1].trim();
+    let rgb = null;
+    if (bg.startsWith('#')) {
+        const hex = bg.slice(1);
+        if (hex.length === 3) rgb = [parseInt(hex[0] + hex[0], 16), parseInt(hex[1] + hex[1], 16), parseInt(hex[2] + hex[2], 16)];
+        else if (hex.length >= 6) rgb = [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
+    } else if (bg.startsWith('rgb')) {
+        const mm = bg.match(/(\d+)[,\s]+(\d+)[,\s]+(\d+)/);
+        if (mm) rgb = [parseInt(mm[1]), parseInt(mm[2]), parseInt(mm[3])];
+    }
+    if (!rgb) return 1;
+    return (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+}
+
+// 产物关校验（iter-01）：复制前对最终 HTML 跑平台约束断言，返回违规清单
+function assertWechatOutput(styled) {
+    const issues = [];
+    const linkRe = /<a\b[^>]*\bhref\s*=\s*["'](https?:\/\/[^"']+)/gi;
+    let m;
+    while ((m = linkRe.exec(styled)) !== null) {
+        if (!/^https?:\/\/mp\.weixin\.qq\.com/i.test(m[1])) {
+            issues.push('存在未转换的外链：' + m[1].slice(0, 40));
+            break;
+        }
+    }
+    if (/href\s*=\s*["']#/i.test(styled)) issues.push('存在页内锚点链接 (href="#")');
+    if (/var\(--/i.test(styled)) issues.push('存在 CSS 变量 (var(--)) 残留');
+    if (/(^|[^-])top\s*:/i.test(styled)) issues.push('存在 top: 定位（应转 transform）');
+    if (/\bundefined\b/i.test(styled)) issues.push('存在 undefined 值');
+    return issues;
 }
 
 function fallbackCopy(html) {
