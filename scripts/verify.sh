@@ -53,10 +53,10 @@ wait "$SRV" 2>/dev/null || true
 
 echo "== 4/4 源头关·主题数据校验 =="
 if command -v node >/dev/null 2>&1; then
-  if node scripts/check-themes.mjs >/dev/null 2>&1; then
-    pass "主题数据通过源头关（非 strict 模式，饱和度违规不阻断；任务 8 清零后切 --strict）"
+  if node scripts/check-themes.mjs --strict >/dev/null 2>&1; then
+    pass "主题数据通过源头关（strict 模式，平台坑+文本色饱和均清零）"
   else
-    fail "主题数据源头关失败（平台坑类违规: var/top/undefined/引号须清零）"
+    fail "主题数据源头关失败（var/top/undefined/引号/文本色饱和 须清零）"
   fi
 else
   fail "源头关: 未找到 node（需 node 运行 scripts/check-themes.mjs）"

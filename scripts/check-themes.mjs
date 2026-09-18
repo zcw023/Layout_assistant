@@ -109,6 +109,21 @@ function extractColors(styleStr) {
   return colors;
 }
 
+// 只提取 color: 声明的文本色（排除 background-color / border-color 等装饰色）
+function extractTextColors(styleStr) {
+  const colors = [];
+  const re = /(?:^|[;\s])color\s*:\s*([^;]+)/gi;
+  let m;
+  while ((m = re.exec(styleStr)) !== null) {
+    const val = m[1].trim();
+    const hex = val.match(/#[0-9a-fA-F]{3,8}/);
+    if (hex) colors.push(hex[0]);
+    const rgb = val.match(/rgba?\(\s*\d+[,\s]+\d+[,\s]+\d+/);
+    if (rgb) colors.push(rgb[0] + ')');
+  }
+  return colors;
+}
+
 // ---------- 单样式串检查 ----------
 function checkStyleString(themeName, tagName, styleStr) {
   const ctx = `${themeName}.${tagName}`;
@@ -129,9 +144,9 @@ function checkStyleString(themeName, tagName, styleStr) {
     }
   }
 
-  // 文本色饱和度（灰阶承重）
+  // 文本色饱和度（灰阶承重）——只查 color: 声明
   if (TEXT_TAGS.includes(tagName)) {
-    for (const c of extractColors(styleStr)) {
+    for (const c of extractTextColors(styleStr)) {
       let rgb;
       if (c.startsWith('#')) rgb = hexToRgb(c);
       else {
