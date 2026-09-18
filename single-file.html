@@ -1864,6 +1864,21 @@ async function copyToWechat() {
             return;
         }
 
+        // 外链图片提示（iter-01 P1-b）：公众号外链图可能失效；base64 与微信图床(mmbiz.qpic.cn)不受影响
+        const externalImages = [];
+        const imgRe = /<img[^>]+src="([^"]+)"/gi;
+        let im;
+        while ((im = imgRe.exec(styled)) !== null) {
+            const src = im[1];
+            if (/^https?:\/\//i.test(src) && !/^https?:\/\/(?:mp\.weixin\.qq\.com|mmbiz\.qpic\.cn)/i.test(src)) {
+                externalImages.push(src);
+            }
+        }
+        if (externalImages.length) {
+            const shown = externalImages.slice(0, 3).map(s => s.length > 40 ? s.slice(0, 40) + '…' : s).join('；');
+            showToast('⚠️ ' + externalImages.length + ' 张外链图片在公众号可能失效：' + shown + (externalImages.length > 3 ? ' 等' : ''));
+        }
+
         if (navigator.clipboard && navigator.clipboard.write) {
             await navigator.clipboard.write([
                 new ClipboardItem({
